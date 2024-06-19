@@ -1,0 +1,22 @@
+<div class="grid grid-cols-3 gap-4 justify-items-center">
+
+  {% for dataset in datasets %}
+  <a href="/dataset/{{dataset.id}}">
+  <div class="card w-64 bg-neutral shadow-xl">
+    <figure><img class="object-contain h-48 w-96" src="https://static.vecteezy.com/system/resources/previews/006/201/171/non_2x/mri-scanner-icon-vector.jpg" alt="Shoes" /></figure>
+    <div class="card-body">
+      <h2 class="card-title">
+        {{dataset.id}}) {{dataset.name}}
+        <div class="badge badge-secondary">MRI</div>
+      </h2>
+      <p>Description?</p>
+      <div class="card-actions justify-end">
+        <div class="badge badge-outline">Fashion</div> 
+        <div class="badge badge-outline">Products</div>
+      </div>
+    </div>
+  </div>
+</a>
+
+    {% endfor %}
+</div>
