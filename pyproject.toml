@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "lazybids-ui"
+version = "0.0.1"
+description = "A web-based graphical user interface server for viewing (and manipulating) BIDS datasets, build on lazybids."
+authors = ["Roelant <roelanteijgelaar@hotmail.com>"]
+readme = "README.md"
+packages = [{include = "lazybids_ui"}]
+
+[tool.poetry.dependencies]
+python = "<3.12,>=3.10"
+lazybids = {git = "https://github.com/roelant001/lazybids.git"}
+fastapi = {extras = ["all"], version = "^0.111.0"}
+pydantic = "^2.7.4"
+sqlmodel = "^0.0.19"
+openneuro-py = "^2024.2.0"
+
+[tool.poetry.group.dev.dependencies]
+jupyterlab = "^4.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

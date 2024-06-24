@@ -12,6 +12,7 @@ from typing import List
 import asyncio
 
 import src.models as models
+from src.random_image import generateCharacter
 import datetime
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
@@ -33,7 +34,7 @@ async def root(request: Request):
 
 
 @app.get("/datasets", response_class=HTMLResponse)
-async def root(request: Request):
+async def datasets(request: Request):
     with Session(engine) as session:
         statement = select(models.Dataset)
         datasets = session.exec(statement).all()
@@ -41,13 +42,25 @@ async def root(request: Request):
     context = {"request": request,'datasets':datasets}
     return templates.TemplateResponse("components/datasets.html", context )
 
+@app.get("/dataset/create", response_class=HTMLResponse)
+async def create_dataset(request: Request,):
+    with Session(engine) as session:
+        example_dataset = models.Dataset(name='test',folder='./example/dataset',icon=generateCharacter())
+        session.add(example_dataset)
+        session.commit()
+    #
+    # return datasets(request)
+
 
 @app.get("/dataset/{ds_id}", response_class=HTMLResponse)
-async def dataset(request: Request, ds_id:int):
+async def get_dataset(request: Request, ds_id:int):
     with Session(engine) as session:
         statement = select(models.Dataset).where(models.Dataset.id==ds_id)
         dataset = session.exec(statement).first()
-    ds = lazybids.Dataset.from_folder(dataset.folder, load_scans_in_memory=False)
+    try:
+        ds = lazybids.Dataset.from_folder(dataset.folder, load_scans_in_memory=False)
+    except Exception as e:
+        return templates.TemplateResponse("components/error.html", context = {"request": request,'error':e} )
 
 # @app.get("/search", response_class=HTMLResponse)
 # async def root(request: Request, search_text: str):

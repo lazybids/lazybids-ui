@@ -9,6 +9,8 @@ class Dataset(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     folder: str
+    description: Optional[str]
+    icon: Optional[str]
 
 engine = create_engine("sqlite:///database.db")
 
