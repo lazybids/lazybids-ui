@@ -1,36 +1,42 @@
 <dialog id="my_modal_5" class="modal modal-bottom sm:modal-middle min-w-96">
 
     <div class="modal-box">
-        <form class="m-4">
+        <form class="m-4" id="newDatasetForm" hx-post="datasets/create">
             <h3 class="font-bold text-lg py-4">Add dataset</h3>
-            Dataset Name
-            <label class="input input-bordered flex items-center gap-2 my-4">
+            
+            <label class="flex items-center gap-2 my-4">
+                <span class="label-text">Dataset Name</span>
 
-                <input name='name' type="text" class="grow" placeholder="BraTS-2023" />
+                <input name='name' type="text" class="grow input input-bordered" placeholder="BraTS-2023" />
             </label>
 
-            <label>
-                <p>Icon</p>
-                <input type="file" class="file-input file-input-sm file-input-bordered w-full max-w-xs" />
+            <label class="flex items-center gap-2 my-4">
+                <span class="label-text">Icon</span>
+                <input type="file" class="file-input file-input-sm file-input-bordered max-w-xs" />
                 <span class="badge badge-info">Optional</span>
             </label>
-            <div class="divider my-8"></div>
+            <div class="divider my-4"></div>
             <h3 class="font-bold text-lg py-4">Data:</h1>
 
 
                 <div role="tablist" class="tabs tabs-bordered">
                     <input type="radio" name="my_tabs_1" role="tab" class="tab min-w-36" aria-label="From server"
                         checked="checked" />
-                    <div role="tabpanel" class="tab-content p-10 min-h-72">Folder path on server
-                        <label class="input input-bordered flex items-center gap-2 my-4">
-
-                            <input name='folder' type="text" class="grow" placeholder="/data/example/myDataset/" />
+                    <div role="tabpanel" class="tab-content p-10 min-h-72">
+                        <label class="flex items-center gap-2 my-4">
+                            <span class="label-text">Folder path on server</span>
+                            <input name='folder' type="text" class="input grow input-bordered" placeholder="/data/example/myDataset/" />
+                            
                         </label>
+                        <label class="label cursor-pointer">
+                            <span class="label-text">Copy dataset to LazyBIDS-ui data-directory</span>
+                            <input name='CopyFolder' type="checkbox" class="toggle toggle-primary" checked="checked" />
+                          </label>
                     </div>
 
                     <input type="radio" name="my_tabs_1" role="tab" class="tab min-w-36" aria-label="Upload" />
                     <div role="tabpanel" class="tab-content p-10 min-h-72"> Upload zip-file
-                        <input type="file"
+                        <input type="file", name="zipfile"
                             class="file-input file-input-bordered file-input-primary w-full max-w-xs m-4" />
                     </div>
 
@@ -38,7 +44,7 @@
                     <div role="tabpanel" class="tab-content p-10 min-h-72"> Add dataset from <a class="text-blue-600"
                             href=http://openneuro.org>openneuro.org</a>
 
-                            Database ID:
+                        Database ID:
                         <label class="input input-bordered flex items-center gap-2 my-4">
 
                             <input name='DatabaseID' type="text" class="grow" placeholder="ds005026" />
@@ -54,9 +60,12 @@
 
                     </div>
 
+
+
                     <!-- <input type="radio" name="my_tabs_1" role="tab" class="tab" aria-label="Tab 3" />
     <div role="tabpanel" class="tab-content p-10">Tab content 3</div> -->
                 </div>
+
 
                 <!-- <div class="flex flex-col w-full border-opacity-50">
             <div class="grid h-20 card rounded-box place-items-center">
@@ -68,13 +77,18 @@
             </div>
           </div> -->
 
+
         </form>
-        <div class="modal-action">
-            <form method="dialog">
-                <!-- if there is a button in form, it will close the modal -->
-                <button class="btn">Close</button>
+        <div class="flex items-end w-full">
+            <input type="submit" form="newDatasetForm" value="Create" class="btn btn-primary">
+            <div class="modal-action">
+                <form method="dialog">
+                    <!-- if there is a button in form, it will close the modal -->
+                    <button class="btn">Close</button>
+
+            </div>
 
         </div>
+        </form>
     </div>
-    </form>
 </dialog>

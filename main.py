@@ -1,18 +1,26 @@
 import html 
-from typing import Optional
-from fastapi import FastAPI, Request, Header, Form
+import shutil
+import tempfile
+import os
+from PIL import Image
+from py7zr import unpack_7zarchive
+shutil.register_unpack_format('7zip', ['.7z'], unpack_7zarchive)
+from typing import Optional, Union
+from fastapi import FastAPI, Request, Header, Form, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 import lazybids
-
+from dotenv import load_dotenv, dotenv_values 
+# loading variables from .env file
+load_dotenv()
 
 from typing import List
 
 import asyncio
 
 import src.models as models
-from src.random_image import generateCharacter
+
 import datetime
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
@@ -24,7 +32,8 @@ engine = create_engine("sqlite:///database.db")
 templates = Jinja2Templates(directory="templates")
 
 
-
+async def error(request, e):
+    return templates.TemplateResponse("components/error.html", context = {"request": request,'error':e} )
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
@@ -38,16 +47,44 @@ async def datasets(request: Request):
     with Session(engine) as session:
         statement = select(models.Dataset)
         datasets = session.exec(statement).all()
-    print(datasets)
     context = {"request": request,'datasets':datasets}
     return templates.TemplateResponse("components/datasets.html", context )
 
-@app.get("/dataset/create", response_class=HTMLResponse)
-async def create_dataset(request: Request,):
-    with Session(engine) as session:
-        example_dataset = models.Dataset(name='test',folder='./example/dataset',icon=generateCharacter())
-        session.add(example_dataset)
-        session.commit()
+@app.post("/datasets/create", response_class=HTMLResponse)
+async def create_dataset(request: Request, name: str = Form(...), 
+                         folder: Optional[str] = Form(None), 
+                         DatabaseID: Optional[str] = Form(None),
+                         Version: Optional[str] = Form(None), 
+                         icon: Union[UploadFile, None] = None, 
+                         zipfile:Union[UploadFile, None] = None):
+    tmp_zipfile_path = None
+    if zipfile:
+        tmp_zipfile_path = os.path.join(tempfile.mkdtemp(), zipfile.filename)
+        with open(tmp_zipfile_path, "wb+") as file_object:
+            shutil.copyfileobj(zipfile.file, file_object)    
+    if icon:
+        tmp_icon_path = os.path.join(tempfile.mkdtemp(), icon.filename)
+        with open(tmp_icon_path, "wb+") as file_object:
+            shutil.copyfileobj(icon.file, file_object)  
+        
+
+        try:
+            im = Image.open(tmp_icon_path)
+            im.verify()
+            # do stuff
+        except IOError:
+            os.remove(tmp_icon_path)
+            # filename not an image file
+            return error(request, 'Icon file not supported')
+        
+    dataset = models.DatasetCreate(name=name,folder=folder,DatabaseID=DatabaseID,Version=Version)
+    dataset.initialize(zipfile=tmp_zipfile_path)
+    print(dataset)
+    return datasets
+    # with Session(engine) as session:
+    #     example_dataset = models.Dataset(name='test',folder='./example/dataset',icon=generateCharacter())
+    #     session.add(example_dataset)
+    #     session.commit()
     #
     # return datasets(request)
 
