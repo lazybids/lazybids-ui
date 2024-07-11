@@ -1,0 +1,34 @@
+<div _="on load put {{columns}} into my.columns
+            put {{rows|safe}} into my.rows">
+  <div>
+    <input _="on keyup put my.value into my.search" type="text" placeholder="Search..." class="px-4 py-2 border rounded" id="table_search">
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-left">
+      <thead>
+        <tr>
+          <th _="on click put my.innerText into my.sortColumn
+                    toggle my.sortDirection between 'asc' and 'desc'
+                    sort my.parentElement.parentElement.nextElementSibling.children by (it.children[my.cellIndex].innerText) according to my.sortDirection"></th>
+        </tr>
+      </thead>
+      <tbody _="on load
+                  repeat for each item in my.parentElement.previousElementSibling.children[0].children
+                    append <tr>
+                      repeat for each item in my.parentElement.parentElement.rows
+                        if (it.cells[item.cellIndex].toString().toLowerCase().includes(my.parentElement.parentElement.search.toLowerCase()))
+                          append <td> with it.cells[item.cellIndex]"></tbody>
+    </table>
+  </div>
+
+  <div class="mt-4">
+    <button _="on click append 'New Column' to my.parentElement.parentElement.columns
+                    repeat for each item in my.parentElement.parentElement.rows
+                      append 'New Cell' to item.cells" class="px-4 py-2 bg-blue-500 text-white rounded">Add Column</button>
+    <button _="on click if my.parentElement.parentElement.columns.length > 1
+                    remove last item from my.parentElement.parentElement.columns
+                    repeat for each item in my.parentElement.parentElement.rows
+                      remove last item from item.cells" class="px-4 py-2 bg-red-500 text-white rounded">Remove Column</button>
+  </div>
+</div>

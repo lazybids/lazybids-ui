@@ -11,22 +11,7 @@
   <div class="flex gap-4 justify-items-center flex-wrap ">
 
     {% for dataset in datasets %}
-    <a hx-get="/dataset/{{dataset.id}}" hx-target="#main_view">
-      <div class="card w-64 bg-neutral shadow-xl">
-        <figure>{{dataset.icon|safe}}</figure>
-        <div class="card-body">
-          <h2 class="card-title">
-            {{dataset.id}}) {{dataset.name}}
-            <div class="badge badge-secondary">MRI</div>
-          </h2>
-          <p>{{dataset.description}}</p>
-          <div class="card-actions justify-end">
-            <div class="badge badge-outline">{{dataset.folder}}</div>
-          </div>
-        </div>
-      </div>
-    </a>
-
+      {% include 'components/dataset_card.html' %}
     {% endfor %}
   </div>
 </div>

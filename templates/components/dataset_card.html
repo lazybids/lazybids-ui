@@ -1,0 +1,58 @@
+{% if dataset.state == 'SUCCESS' %}
+    
+
+<a hx-get="/dataset/{{dataset.id}}" hx-target="#main_view" hx-push-url="true" hx-indicator="#spinner">
+  <div class="card w-64 bg-neutral shadow-xl">
+    <figure>{{dataset.icon|safe}}</figure>
+    <div class="card-body">
+      <h2 class="card-title">
+        {{dataset.id}}) {{dataset.name}}
+        <div class="badge badge-secondary">MRI</div>
+      </h2>
+      <p>{{dataset.description}}</p>
+      <div class="card-actions justify-end">
+        <div class="badge badge-outline">{{dataset.folder}}</div>
+      </div>
+      <div id="spinner">
+      <img width="120" class="htmx-indicator" src="/static/bars.svg"/>
+      <p>Loading dataset...</p>
+    </div>
+    </div>
+  </div>
+</a>
+{% elif dataset.state == 'FAILURE' %}
+<div class="card w-64 bg-neutral shadow-xl">
+  <figure>{{dataset.icon|safe}}</figure>
+  <div class="card-body">
+    <h2 class="card-title">
+      {{dataset.id}}) {{dataset.name}}
+    </h2>
+    <h3 class="text-red-700">FAILED TO LOAD!!</h3>
+    <p>{{dataset.description}}</p>
+    <div class="card-actions justify-end">
+      <div class="badge badge-outline">{{dataset.folder}}</div>
+    </div>
+  </div>
+</div>
+
+
+{% elif dataset.state == 'PENDING' %}
+<div class="card w-64 bg-neutral shadow-xl" hx-get="/dataset_card/{{dataset.id}}" hx-trigger="load delay:4s" hx-swap="outerHTML" >
+  <figure>{{dataset.icon|safe}}</figure>
+  <div class="card-body">
+    <h2 class="card-title">
+      {{dataset.id}}) {{dataset.name}}
+      <div class="badge badge-secondary">MRI</div>
+    </h2>
+    <div class="text-left items-left animate-pulse">
+      <img alt="Result loading..." width="120" src="/static/bars.svg"/>
+    <div class="card-actions justify-end">
+      <div class="badge badge-outline">{{dataset.folder}}</div>
+    </div>
+  </div>
+</div>
+</div>
+
+
+{% endif %}
+

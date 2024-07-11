@@ -15,16 +15,20 @@ from dotenv import load_dotenv, dotenv_values
 # loading variables from .env file
 load_dotenv()
 
+import pandas as pd
 from typing import List
+import functools
 
 import asyncio
 
-import src.models as models
+from src import models, worker
 
 import datetime
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
 import hashlib
+
+from pretty_html_table import build_table
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -38,26 +42,74 @@ async def error(request, e):
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
 
-    context = {"request": request,}
+    context = {"request": request,'mainViewURL':'/datasets'}
     return templates.TemplateResponse("root.html", context )
 
 
 @app.get("/datasets", response_class=HTMLResponse)
 async def datasets(request: Request):
-    with Session(engine) as session:
-        statement = select(models.Dataset)
-        datasets = session.exec(statement).all()
-    context = {"request": request,'datasets':datasets}
-    return templates.TemplateResponse("components/datasets.html", context )
+    print(request.headers.keys())
+    if not('hx-request' in request.headers.keys()):
+        return await root(request)
+    else:
+        with Session(engine) as session:
+            statement = select(models.Dataset)
+            datasets = session.exec(statement).all()
+            for dataset in datasets:
+                if dataset.taskID:
+                    if dataset.state in ['SUCCESS','FAILURE']:
+                        continue
+                    else:
+                        task = worker.openneuro_download.AsyncResult(dataset.taskID)
+                        dataset.state = task.state
+                        session.add(dataset)
+                        session.commit()
+                if not(dataset.taskID) and dataset.state != 'SUCCESS':
+                        dataset.state = 'SUCCESS'
+                        session.add(dataset)
+                        session.commit()
+
+            context = {"request": request,'datasets':datasets}
+            output = templates.TemplateResponse("components/datasets.html", context )
+        return output
+    
+@app.get("/dataset_card/{ds_id}", response_class=HTMLResponse)
+async def datasets(request: Request, ds_id:int):
+    if not('hx-request' in request.headers.keys()):
+        return await root(request)
+    else:
+        with Session(engine) as session:
+            statement = select(models.Dataset).where(models.Dataset.id==ds_id)
+            dataset = session.exec(statement).first()
+            if dataset.taskID:
+                if dataset.state in ['SUCCESS','FAILURE']:
+                    print('ready')
+                else:
+                    task = worker.openneuro_download.AsyncResult(dataset.taskID)
+                    dataset.state = task.state
+                    session.add(dataset)
+                    session.commit()
+            if not(dataset.taskID) and dataset.state != 'SUCCESS':
+                    dataset.state = 'SUCCESS'
+                    session.add(dataset)
+                    session.commit()
+
+            context = {"request": request,'dataset':dataset}
+            output = templates.TemplateResponse("components/dataset_card.html", context )
+        return output
+
 
 @app.post("/datasets/create", response_class=HTMLResponse)
-async def create_dataset(request: Request, name: str = Form(...), 
+async def create_dataset(request: Request, 
+                         name: str = Form(...), 
                          folder: Optional[str] = Form(None), 
                          DatabaseID: Optional[str] = Form(None),
                          Version: Optional[str] = Form(None), 
+                         CopyFolder: Optional[str] = Form(None),
                          icon: Union[UploadFile, None] = None, 
                          zipfile:Union[UploadFile, None] = None):
     tmp_zipfile_path = None
+    my_icon = None
     if zipfile:
         tmp_zipfile_path = os.path.join(tempfile.mkdtemp(), zipfile.filename)
         with open(tmp_zipfile_path, "wb+") as file_object:
@@ -66,38 +118,75 @@ async def create_dataset(request: Request, name: str = Form(...),
         tmp_icon_path = os.path.join(tempfile.mkdtemp(), icon.filename)
         with open(tmp_icon_path, "wb+") as file_object:
             shutil.copyfileobj(icon.file, file_object)  
-        
-
         try:
             im = Image.open(tmp_icon_path)
             im.verify()
+            my_icon = tmp_icon_path
             # do stuff
         except IOError:
             os.remove(tmp_icon_path)
             # filename not an image file
             return error(request, 'Icon file not supported')
-        
-    dataset = models.DatasetCreate(name=name,folder=folder,DatabaseID=DatabaseID,Version=Version)
-    dataset.initialize(zipfile=tmp_zipfile_path)
-    print(dataset)
-    return datasets
-    # with Session(engine) as session:
-    #     example_dataset = models.Dataset(name='test',folder='./example/dataset',icon=generateCharacter())
-    #     session.add(example_dataset)
-    #     session.commit()
-    #
-    # return datasets(request)
+    print('create dataset create')
+    datasetCreation = models.DatasetCreate(name=name,
+                                   folder=folder,
+                                   DatabaseID=DatabaseID,
+                                   Version=Version,
+                                   CopyFolder=CopyFolder=='on',
+                                   icon=my_icon)
+    print('create dataset')
+    dataset = datasetCreation.createDataset(zipfile=tmp_zipfile_path)
+    with Session(engine) as session:
+        session.add(dataset)
+        session.commit()
+    print('return dataset')
+    return await datasets(request)
 
+
+@functools.lru_cache(maxsize=12)
+def get_ds(folder):
+    ds = lazybids.Dataset.from_folder(folder, load_scans_in_memory=False)
+    return ds
 
 @app.get("/dataset/{ds_id}", response_class=HTMLResponse)
 async def get_dataset(request: Request, ds_id:int):
-    with Session(engine) as session:
-        statement = select(models.Dataset).where(models.Dataset.id==ds_id)
-        dataset = session.exec(statement).first()
-    try:
-        ds = lazybids.Dataset.from_folder(dataset.folder, load_scans_in_memory=False)
-    except Exception as e:
-        return templates.TemplateResponse("components/error.html", context = {"request": request,'error':e} )
+    if not('hx-request' in request.headers.keys()):
+        context = {"request": request,'mainViewURL':f"/dataset/{ds_id}"}
+        return templates.TemplateResponse("root.html", context )
+    else:
+        with Session(engine) as session:
+            statement = select(models.Dataset).where(models.Dataset.id==ds_id)
+            dataset = session.exec(statement).first()
+        try:
+            ds = get_ds(dataset.folder)
+        except Exception as e:
+            return templates.TemplateResponse("components/error.html", context = {"request": request,'error':e} )
+        
+        return templates.TemplateResponse("components/dataset_view.html", context = {"request": request,'dataset':dataset,'meta_data':ds.all_meta_data} )
+
+
+@app.get("/dataset/{ds_id}/subjects", response_class=HTMLResponse)
+async def get_dataset(request: Request, ds_id:int):
+    if not('hx-request' in request.headers.keys()):
+        context = {"request": request,'mainViewURL':f"/dataset/{ds_id}"}
+        return templates.TemplateResponse("root.html", context )
+    else:
+        with Session(engine) as session:
+            statement = select(models.Dataset).where(models.Dataset.id==ds_id)
+            dataset = session.exec(statement).first()
+        try:
+            ds = get_ds(dataset.folder)
+            df = pd.DataFrame([s.all_meta_data for s in ds.subjects])
+        except Exception as e:
+            return templates.TemplateResponse("components/error.html", context = {"request": request,'error':e} )
+        
+        context = {'request': request,
+                   'columns': df.columns.tolist(),
+                   'rows': [{'id':i,'cells':list(p.values())} for i,p in enumerate(df.to_dict('records'))]
+                   }
+        return templates.TemplateResponse("components/table.html", context = context )
+    #df.to_html().replace("class=\"dataframe\"","class='dataframe table table-xs' id='myTable'" )+"<script>let table = new DataTable('#myTable');</script>" #build_table(df, color='blue_light') #templates.TemplateResponse("components/dataset_view.html", context = {"request": request,'dataset':dataset,'meta_data':ds.all_meta_data} )
+
 
 # @app.get("/search", response_class=HTMLResponse)
 # async def root(request: Request, search_text: str):

@@ -1,9 +1,12 @@
+from dotenv import load_dotenv, dotenv_values 
+load_dotenv()
 from pydantic import BaseModel, validator
 from enum import Enum
 from typing import Optional, List, Union
 import os
 import shutil
-import openneuro
+#import openneuro
+from src import worker
 from sqlmodel import Field, Session, SQLModel, create_engine
 from pathlib import Path
 from src.random_image import generateCharacter
@@ -17,6 +20,8 @@ class Dataset(SQLModel, table=True):
     OpenNeuroVersion: Optional[str]
     description: Optional[str]
     icon: Optional[str]
+    taskID: Optional[str]
+    state: Optional[str]
 
 class DatasetCreate(BaseModel):
     name: str
@@ -24,7 +29,7 @@ class DatasetCreate(BaseModel):
     DatabaseID: Optional[str]
     Version: Optional[str]
     CopyFolder: Optional[bool]
-    icon: Optional[]
+    icon: Optional[str]
 
     @validator('DatabaseID', pre=True, always=True)
     def check_a_or_b(cls, DatabaseID, values):
@@ -33,14 +38,13 @@ class DatasetCreate(BaseModel):
         elif values.get('folder') and DatabaseID:
             raise ValueError('Both server-folder and OpenNeuro database ID provided, provide either folder, or OpenNeuro databaseID not both.')
         return DatabaseID
-    def initialize(self, zipfile: Union[Path, None] = None):
+    def createDataset(self, zipfile: Union[Path, None] = None):
+        task_id = None
         data_dir = os.path.join(os.getenv("LAZYBIDS_DATA_PATH"), f"{self.DatabaseID}-{self.name}")
         if self.DatabaseID:
             os.makedirs(data_dir)
-            if self.Version:
-                openneuro.download(dataset=self.DatabaseID, target_dir=data_dir, version=self.Version)
-            else:
-                openneuro.download(dataset=self.DatabaseID, target_dir=data_dir)
+            task = worker.openneuro_download.delay(self.DatabaseID, self.Version, data_dir)
+            task_id = task.id
             self.folder=data_dir
         elif self.folder:
             if self.CopyFolder:
@@ -52,11 +56,13 @@ class DatasetCreate(BaseModel):
             shutil.unpack_archive(zipfile, data_dir)
             self.folder = data_dir
         if self.icon:
-            shutil.copy(self.icon, './static/'+uuid.uuid4()+os.path.split(self.icon)[-1])
-            self.icon = "<img src='img_girl.jpg' alt='Girl in a jacket' width='500' height='600'>"
+            icon_path = './static/'+uuid.uuid4()+os.path.split(self.icon)[-1]
+            shutil.copy(self.icon, icon_path)
+            self.icon = f"<img src='{icon_path}' alt='Dataset icon' width='200' height='200'>"
         else:
             self.icon=generateCharacter()
-        return Dataset(folder=self.folder, name=self.name, OpenNeuroID=self.DatabaseID, OpenNeuroVersion=self.Version)
+        dataset = Dataset(folder=self.folder, name=self.name, OpenNeuroID=self.DatabaseID, OpenNeuroVersion=self.Version, taskID=task_id, icon=self.icon)
+        return dataset
 
 
 engine = create_engine("sqlite:///database.db")
@@ -64,43 +70,3 @@ engine = create_engine("sqlite:///database.db")
 
 SQLModel.metadata.create_all(engine)
 
-
-# Now, we can use the response_model parameter using only a base model
-# rather than having to use the OpenAISchema class
-# class Currency(str, Enum):
-#     dollar = '$'
-#     euro = '€'
-
-# class Argument(BaseModel):
-#     argument: str
-#     start_time: float
-
-# class Product(BaseModel):
-#     name: str
-#     name_wo_brand: str
-#     brand: str
-#     price: int
-#     currency: Currency
-#     pros: List[str]
-#     cons: List[str]
-
-# class ProductList(BaseModel):
-#     products: List[Product]
-
-# class ProductsList(BaseModel):
-#     products: List[Product]
-#     transcript: str
-#     #transcript_hash: str#Indexed(str, unique=True) # type: ignore
-
-
-# class YTVideo(BaseModel):
-#     id: str
-#     title: str
-#     channel: str
-#     my_search: str
-
-# class Task(BaseModel):
-#     id: str
-
-# class ValuableTranscript(BaseModel):
-#     valuable: bool

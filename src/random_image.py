@@ -89,7 +89,7 @@ def generateCharacter():
   randBgIndex = math.floor(random.random() * len(bgColors))
   
   # Compiling various parts
-  header = f'<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="400" height="200">\n'
+  header = f'<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="200" height="200">\n'
   footer = f'</svg>'
   background = f'<rect x="0" y="0" width="100" height="100" fill="{bgColors[randBgIndex]}"/>'
   body = f'<path stroke="transparent" stroke-width="0" fill = "{colors[randColorIndex]}" d="{blob}" />'

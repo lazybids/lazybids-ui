@@ -6,17 +6,24 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FastAPI demo</title>
+    <script
+  src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+  integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8="
+  crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
     <script src="https://unpkg.com/htmx.org@1.6.1"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script> -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <!-- <link href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css" rel="stylesheet" type="text/css" /> -->
+    <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
 </head>
 
 <body>
     <div class="w-full">
     {% include 'components/header.html' %}
     <div class="w-full">
-    <div hx-get="/datasets" hx-trigger="load" class="m-8" id="main_view"></div>
+    <div hx-get="{{mainViewURL}}" hx-trigger="load" class="m-4" id="main_view"></div>
     </div>
     </div>
                     

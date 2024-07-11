@@ -1,0 +1,76 @@
+<a hx-get="/dataset/{{dataset.id}}" hx-target="#main_view">
+    <div class="flex flex-col sm:flex-row">
+        <div class="flex-none grow-0 w-12 h-10 sm:w-48 sm:h-32">
+            <figure class="scale-50 sm:scale-100 -translate-y-20 sm:-translate-y-10 -translate-x-4">{{dataset.icon|safe}}</figure>
+        </div>
+        <div class="grow">
+            <div class="flex md:flex-row flex-wrap">
+                <h1 class="text-4xl font-bold">{{ meta_data.name }}</h1>
+                {% if 'dataset_doi' in meta_data %}
+                <a class="m-4 min-h-4" href="https://doi.org/{{meta_data.dataset_doi.replace('doi:','')}}" target="_blank" rel="noopener noreferrer"><img
+                        src="https://zenodo.org/badge/DOI/{{meta_data.dataset_doi.replace('doi:','')}}.svg"
+                        alt="DOI badge"></a>
+                {% endif %}
+                {% if 'license' in meta_data %}
+                {% if 'CC0' in meta_data.license %}
+                <a class="m-4" href="http://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer"><img
+                        src="https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg" alt="License: CC0-1.0"></a>
+
+                {% endif %}
+                {% elif 'PDDL' in meta_data.license %}
+                <a class="m-4" href="https://opendatacommons.org/licenses/pddl/" target="_blank" rel="noopener noreferrer"><img
+                        src="https://img.shields.io/badge/License-PDDL-brightgreen.svg" alt="License: PDDL"></a>
+
+                
+                {% endif %}
+
+
+            </div>
+            {% if 'authors' in meta_data %}
+            <h3 class="text-sm px-8 pb-4">{{meta_data.authors|join(', ')}}</h3>
+            {% endif %}
+
+                
+
+
+        </div>
+    </div>
+</a>
+<div class="divider my-0"></div>
+<div class="container mx-auto my-2">
+
+    <div class="flex flex-wrap gap-2 columns-8">
+        {% for key, value in meta_data.items() %}
+        <!-- Folder Card -->
+        {% if key not in ['dataset_doi', 'name', 'authors']%}
+        {% if value %}
+        {% if not (key == 'license' and 'CC0' in value) %}
+        {% if not (key == 'license' and 'PDDL' in value) %}
+        <div class="card bg-neutral shadow-xl m-0 p-0 shrink">
+            <div class="card-body my-2 mx-4 p-0 shrink tracking-tight gap-0 max-w-2xl">
+                <h2 class="card-title mb-0">{{key.replace('_',' ')|capitalize}}</h2>
+                {% if value is string %}
+                <p class="text-sm">{{ value }}</p>
+                {% elif value is mapping %}
+                {% for k,v in value.items() %}
+                <li class="text-sm">{{k}}) {{v}}</li>
+                {% endfor %}
+                {% elif value is iterable %}
+                {% for v in value %}
+                <li class="text-sm">{{v}}</li>
+                {% endfor %}
+                {% else %}
+                <p class="text-sm">{{ value }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+
+    </div>
+</div>
+<div class="divider my-0"></div>
+<div hx-get="/dataset/{{dataset.id}}/subjects" hx-trigger="load"></div>

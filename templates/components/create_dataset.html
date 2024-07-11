@@ -1,7 +1,7 @@
 <dialog id="my_modal_5" class="modal modal-bottom sm:modal-middle min-w-96">
 
     <div class="modal-box">
-        <form class="m-4" id="newDatasetForm" hx-post="datasets/create">
+        <form class="m-4" id="newDatasetForm" hx-post="datasets/create" hx-target="#main_view">
             <h3 class="font-bold text-lg py-4">Add dataset</h3>
             
             <label class="flex items-center gap-2 my-4">
