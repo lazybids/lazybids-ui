@@ -1,34 +1,76 @@
-<div _="on load put {{columns}} into my.columns
-            put {{rows|safe}} into my.rows">
-  <div>
-    <input _="on keyup put my.value into my.search" type="text" placeholder="Search..." class="px-4 py-2 border rounded" id="table_search">
-  </div>
+<div id="wrapper"></div>
+<div hx-get="/dataset/{{ds_id}}/subject/{{s_id}}/session/{{exp_id}}/scans_view" hx-trigger="load"></div>
 
-  <div class="overflow-x-auto">
-    <table class="min-w-full text-left">
-      <thead>
-        <tr>
-          <th _="on click put my.innerText into my.sortColumn
-                    toggle my.sortDirection between 'asc' and 'desc'
-                    sort my.parentElement.parentElement.nextElementSibling.children by (it.children[my.cellIndex].innerText) according to my.sortDirection"></th>
-        </tr>
-      </thead>
-      <tbody _="on load
-                  repeat for each item in my.parentElement.previousElementSibling.children[0].children
-                    append <tr>
-                      repeat for each item in my.parentElement.parentElement.rows
-                        if (it.cells[item.cellIndex].toString().toLowerCase().includes(my.parentElement.parentElement.search.toLowerCase()))
-                          append <td> with it.cells[item.cellIndex]"></tbody>
-    </table>
-  </div>
+<script>
+  const grid = new gridjs.Grid({
+    columns: 
+    
+    {% if not(scans) %}
+    [{ name: 'participant_id', formatter: (cell) => gridjs.html(`${cell}`) }, { name: 'session_id', formatter: (cell) => gridjs.html(`${cell}`) }].concat( {{ columns | safe}}),
+    {%else%}
+    [{ name: 'name', formatter: (cell) => gridjs.html(`${cell}`) }].concat( {{ columns | safe}}),
+    {% endif %}
 
-  <div class="mt-4">
-    <button _="on click append 'New Column' to my.parentElement.parentElement.columns
-                    repeat for each item in my.parentElement.parentElement.rows
-                      append 'New Cell' to item.cells" class="px-4 py-2 bg-blue-500 text-white rounded">Add Column</button>
-    <button _="on click if my.parentElement.parentElement.columns.length > 1
-                    remove last item from my.parentElement.parentElement.columns
-                    repeat for each item in my.parentElement.parentElement.rows
-                      remove last item from item.cells" class="px-4 py-2 bg-red-500 text-white rounded">Remove Column</button>
-  </div>
-</div>
+  data: {{ df | safe }},
+  pagination: {
+    limit: 50,
+  },
+      search:true,
+      sort: true,
+      
+      resizable: true,
+      
+      
+      className: {    
+        // td: 'my-custom-td-class',
+        table: 'table table-xs bg-neutral',
+        // container: 'bg-neutral',
+        // td: 'p0 m-0',
+        // th: 'p0 m-0',
+        // tr: 'p0 m-0',
+        header: 'text-white text-xl',
+        // footer: 'bg-neutral',
+        // thead: 'bg-neutral',
+        // tbody: 'bg-neutral',
+        // search: 'bg-neutral',
+        // sort: '',
+        // pagination: 'bg-neutral',
+        // paginationSummary: 'button',
+        // paginationButton: 'button',
+        // paginationSummary: 'button',
+        // paginationButtonNext: 'bg-accent button',
+        // paginationButtonCurrent: 'button',
+        // paginationButtonPrev: 'bg-accent button',
+        // loading: '',
+        
+
+      
+      },
+      style:{
+      //   container:{
+      //     backgroundColor: '#2E3744', 
+      //   },
+      //   th:{
+      //     color: 'white',
+      //     backgroundColor: '#2E3744', 
+      //     border: '1px solid #2E3744',
+      //   },
+      //   td:{
+      //     color: '#0F0F0F',
+      //     backgroundColor: '#2E3744', 
+      //     border: '1px solid #2E3744',
+      //   },
+
+        table: {
+          'white-space': 'nowrap'
+        },
+      //   footer: {
+      //     backgroundColor: '#28374F',
+      //   }
+
+      },
+      width: '100%',
+      height: '100%',
+
+    }).render(document.getElementById('wrapper'));
+</script>

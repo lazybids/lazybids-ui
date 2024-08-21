@@ -49,7 +49,7 @@ class DatasetCreate(BaseModel):
         elif self.folder:
             if self.CopyFolder:
                 os.makedirs(data_dir)
-                shutil.copy(self.folder,data_dir)
+                shutil.copytree(self.folder,data_dir)
                 self.folder = data_dir
         elif zipfile:
             os.makedirs(data_dir)

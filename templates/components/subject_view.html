@@ -1,4 +1,29 @@
-{% include 'components/dataset_header.html' %}
+
+<a hx-get="/dataset/{{dataset.id}}/subject/{{meta_data.participant_id}}" hx-target="#main_view">
+    <div class="flex flex-col sm:flex-row">
+        <div class="flex-none grow-0 w-12 h-10 sm:w-48 sm:h-32">
+            <figure class="scale-50 sm:scale-100 -translate-y-20 sm:-translate-y-10 -translate-x-4">{{dataset.icon|safe}}</figure>
+        </div>
+        <div class="grow">
+            <div class="flex md:flex-row flex-wrap">
+                <h1 class="text-4xl font-bold">{{ meta_data.participant_id }} | </h1>
+
+                {% if 'age' in meta_data %}
+                <h1 class="text-4xl px-8 pb-4">Age: {{meta_data.age}}</h1>
+                {% endif %}
+                {% if 'sex' in meta_data %}
+                <h1 class="text-4xl px-4 pb-4">Sex: {{meta_data.sex}}</h1>
+                {% endif %}
+
+            </div>
+
+
+                
+
+
+        </div>
+    </div>
+</a>
 <div class="divider my-0"></div>
 <details class="collapse bg-base-200">
     <summary class="collapse-title text-xl font-medium">Details (expand)</summary>
@@ -9,10 +34,8 @@
     <div class="flex flex-wrap gap-2 columns-8">
         {% for key, value in meta_data.items() %}
         <!-- Folder Card -->
-        {% if key not in ['dataset_doi', 'name', 'authors']%}
+        {% if key not in ['participant_id', 'age','sex']%}
         {% if value %}
-        {% if not (key == 'license' and 'CC0' in value) %}
-        {% if not (key == 'license' and 'PDDL' in value) %}
         <div class="card bg-neutral shadow-xl m-0 p-0 shrink">
             <div class="card-body my-2 mx-4 p-0 shrink tracking-tight gap-0 max-w-2xl">
                 <h2 class="card-title mb-0">{{key.replace('_',' ')|capitalize}}</h2>
@@ -33,8 +56,6 @@
         </div>
         {% endif %}
         {% endif %}
-        {% endif %}
-        {% endif %}
         {% endfor %}
 
     </div>
@@ -42,5 +63,5 @@
 </div>
 </details>
 <div class="divider my-0"></div>
-<h1 class="text-xl text-white">Subjects:</h1>
-<div hx-get="/dataset/{{dataset.id}}/subjects" hx-trigger="load"></div>
+<h1 class="text-xl text-white">Sessions:</h1>
+<div hx-get="/dataset/{{dataset.id}}/subject/{{meta_data.participant_id}}/sessions" hx-trigger="load"></div>

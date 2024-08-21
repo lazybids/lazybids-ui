@@ -1,0 +1,48 @@
+<div class="grid grid-cols-1 lg:grid-cols-3 justify-items-center width-full">
+  {% for scan in scans %}
+  <div class="max-h-[50rem] w-11/12 grow pb-16 m-4 rounded-lg bg-black shadow-2xl shadow-teal-500/50">
+  <p class="px-8 py-2">{{scan.name}}</p>
+    <canvas id={{scan.name}} left=0, top=0, position= 'relative', flex='auto',height=480 width=640></canvas>
+  </div>
+  {% endfor %}
+
+</div>
+
+
+{% for scan in scans %}
+  <script async defer>
+
+    var volumeList = [
+      // first object in array is background image
+        {
+          url: "/dataset/{{ds_id}}/subject/{{s_id}}/session/{{exp_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
+          // name: "some_image",
+          // colorMap: "gray",
+          // opacity: 1,
+          // visible: true,
+        }
+    ]
+
+  // Niivue will adjust the canvas to 100% of its parent container's size 
+  // the parent element can be any size you want (small or large)
+  var nv = new window.niivue.Niivue()
+  nv.attachTo('{{scan.name}}') // the canvas element id
+  nv.loadVolumes(volumeList)
+  // nv.setSliceType(nv.sliceTypeMultiPlanar) // press the "v" key to cycle through views
+  </script>
+{% endfor %}
+
+
+<!-- <script type="module" async="">
+  import * as niivue from "https://niivue.github.io/niivue/dist/index.js"
+// make an array of volumes to load
+let volumeList = [
+{
+ url: "https://niivue.github.io/niivue-demo-images/mni152.nii.gz",
+ colormap: "red", // see: https://niivue.github.io/niivue/colormaps.html
+},
+];
+const nv = new niivue.Niivue();
+nv.attachTo("sub-01_ses-01_T1w"); // attach to canvas with id="gl"
+nv.loadVolumes(volumeList);
+</script> -->
