@@ -194,6 +194,13 @@ async def get_dataset(request: Request, ds_id:int):
         
         return templates.TemplateResponse("components/dataset_view.html", context = {"request": request,'dataset':dataset,'meta_data':ds.all_meta_data} )
 
+def to_subject_url(subject_id, ds_id ):
+    return f"<a class='btn btn-outline btn-primary btn-xs' href='/dataset/{ds_id}/subject/{subject_id}' hx-target='#main_view'>{subject_id}</a>"
+
+def to_session_url(subject_id,session_id, ds_id ):
+    return f"<a class='btn btn-outline btn-secondary btn-xs' href='/dataset/{ds_id}/subject/{subject_id}/session/{session_id}' hx-target='#main_view'>{session_id}</a>"
+
+
 
 @app.get("/dataset/{ds_id}/subjects", response_class=HTMLResponse)
 @jinja.hx("components/table.html")
@@ -208,13 +215,13 @@ async def get_subjects(request: Request, ds_id:int, session: Session = Depends(g
         try:
             ds = get_ds(dataset.folder)
             df = pd.DataFrame([s.all_meta_data for s in ds.subjects])
-
+            columns = df.columns.tolist()
             if 'session_id' in df.columns.tolist():
                 df['session_id'] = df[['participant_id', 'session_id']].apply(lambda x: to_session_url(x['participant_id'], x['session_id'], ds_id), axis=1)
+                columns.remove('session_id')
             df['participant_id'] = df['participant_id'].apply(to_subject_url, ds_id=ds_id)
-            columns = df.columns.tolist()
             columns.remove('participant_id')
-            columns.remove('session_id')
+            
 
 
         except Exception as e:
@@ -223,15 +230,11 @@ async def get_subjects(request: Request, ds_id:int, session: Session = Depends(g
         context = {
                    'df' : df.astype(str).to_json(orient='records', default_handler=str),
                    'columns': columns,
-                    
+                    'ds_id': ds_id,
+                    's_id': '',
+                    'exp_id': '',
                    }
         return context 
-
-def to_subject_url(subject_id, ds_id ):
-    return f"<a class='btn btn-outline btn-primary btn-xs' href='/dataset/{ds_id}/subject/{subject_id}' hx-target='#main_view'>{subject_id}</a>"
-
-def to_session_url(subject_id,session_id, ds_id ):
-    return f"<a class='btn btn-outline btn-secondary btn-xs' href='/dataset/{ds_id}/subject/{subject_id}/session/{session_id}' hx-target='#main_view'>{session_id}</a>"
 
 
 @app.get("/dataset/{ds_id}/subject/{s_id}", response_class=HTMLResponse)
@@ -290,7 +293,10 @@ async def get_sessions(request: Request, ds_id:int, s_id:str, session: Session =
             context = {
                     'df' : df.astype(str).to_json(orient='records', default_handler=str),
                     'columns': columns,
-                        
+                    'ds_id': ds_id,
+                    's_id': s_id,
+                    'exp_id': '',
+                    'scans': False
                     }
             return context 
     
@@ -317,9 +323,7 @@ async def get_session(request: Request, ds_id:int, s_id:str, exp_id:str, session
                 experiment.participant_id = s_id
             
 
-                
-
-
+            
             return templates.TemplateResponse("components/experiment_view.html", 
                                             context = {"request": request,
                                                         'dataset':dataset,
@@ -364,8 +368,41 @@ async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, session: 
                     }
             return context 
     
-    # except Exception as e:
-    #     return templates.TemplateResponse("components/error.html", context = {"request": request,'error':e} )
+
+@app.get("/dataset/{ds_id}/subject/{s_id}/scans", response_class=HTMLResponse)
+@jinja.hx("components/table.html")
+async def get_scans(request: Request, ds_id:int, s_id:str, session: Session = Depends(get_db)):
+    # try:
+        if not('hx-request' in request.headers.keys()):
+            context = {"request": request,'mainViewURL':f"/dataset/{ds_id}/subject/{s_id}/session/{exp_id}/scans"}
+            return templates.TemplateResponse("root.html", context )
+        else:
+            
+            statement = select(models.Dataset).where(models.Dataset.id==ds_id)
+            dataset = session.exec(statement).first()
+            ds = get_ds(dataset.folder)
+            print(s_id)
+            subject = [s for s in ds.subjects if s.participant_id==s_id][0]
+            
+            df = pd.DataFrame([s.all_meta_data for s in subject.scans.values()])
+
+            
+            columns = df.columns.tolist()
+            
+            if 'name' in columns:
+                columns.remove('name')
+
+
+            
+            context = {
+                    'df' : df.astype(str).to_json(orient='records', default_handler=str),
+                    'ds_id':ds_id,
+                    's_id': s_id,
+                    'exp_id': '',
+                    'columns': columns,
+                    'scans': True,
+                    }
+            return context 
 
 def short_fname(fname):
     return os.path.split(str(fname))[-1]
@@ -385,6 +422,18 @@ async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, scan_id:s
     return [f for f in scan.files if short_fname(f)==fname][0]
 
 
+@app.get("/dataset/{ds_id}/subject/{s_id}/scan/{scan_id}/files/{fname}", response_class=FileResponse)
+async def get_scans(request: Request, ds_id:int, s_id:str, scan_id:str, fname:str, session: Session = Depends(get_db)):
+
+    statement = select(models.Dataset).where(models.Dataset.id==ds_id)
+    dataset = session.exec(statement).first()
+    ds = get_ds(dataset.folder)
+    print(s_id)
+    subject = [s for s in ds.subjects if s.participant_id==s_id][0]
+    scan = [s for s in subject.scans.values() if s.name==scan_id][0]
+
+    return [f for f in scan.files if short_fname(f)==fname][0]
+
 
 @app.get("/dataset/{ds_id}/subject/{s_id}/session/{exp_id}/scans_view", response_class=HTMLResponse)
 @jinja.hx("components/scans.html")
@@ -401,8 +450,8 @@ async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, session: 
             print(s_id)
             subject = [s for s in ds.subjects if s.participant_id==s_id][0]
             experiment = [e for e in subject.experiments if e.session_id==exp_id][0]
-            scans = [{'name': scan.name, 'fname':short_fname(scan.files[0])} for scan in experiment.scans.values()]
-
+            scans = [{'name': scan.name, 'fname':short_fname(scan.files[0])} for scan in experiment.scans.values() if scan.files]
+            tables = [{'name': scan.name, 'table':build_table(scan.table, 'grey_dark')} for scan in experiment.scans.values() if (type(scan.table) == pd.DataFrame)]
 
             
             context = {
@@ -410,6 +459,35 @@ async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, session: 
                     's_id': s_id,
                     'exp_id': exp_id,
                     'scans': scans,
+                    'tables':tables,
+                    }
+            return context 
+    
+
+@app.get("/dataset/{ds_id}/subject/{s_id}/scans_view", response_class=HTMLResponse)
+@jinja.hx("components/scans.html")
+async def get_scans(request: Request, ds_id:int, s_id:str, session: Session = Depends(get_db)):
+    # try:
+        if not('hx-request' in request.headers.keys()):
+            context = {"request": request,'mainViewURL':f"/dataset/{ds_id}/subject/{s_id}/session/{exp_id}/scans"}
+            return templates.TemplateResponse("root.html", context )
+        else:
+            
+            statement = select(models.Dataset).where(models.Dataset.id==ds_id)
+            dataset = session.exec(statement).first()
+            ds = get_ds(dataset.folder)
+            print(s_id)
+            subject = [s for s in ds.subjects if s.participant_id==s_id][0]
+            
+            scans = [{'name': scan.name, 'fname':short_fname(scan.files[0])} for scan in subject.scans.values()]
+            tables = [{'name': scan.name, 'table':build_table(scan.table, 'grey_dark')} for scan in subject.scans.values() if (type(scan.table) == pd.DataFrame)]
+
+            
+            context = {
+                    'ds_id':ds_id,
+                    's_id': s_id,
+                    'scans': scans,
+                    'tables':tables,
                     }
             return context 
     

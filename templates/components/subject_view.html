@@ -65,3 +65,8 @@
 <div class="divider my-0"></div>
 <h1 class="text-xl text-white">Sessions:</h1>
 <div hx-get="/dataset/{{dataset.id}}/subject/{{meta_data.participant_id}}/sessions" hx-trigger="load"></div>
+<div class="divider my-0"></div>
+<h1 class="text-xl text-white">Scans:</h1>
+<div hx-get="/dataset/{{dataset.id}}/subject/{{meta_data.participant_id}}/scans" hx-trigger="load">
+    <img  alt="Result loading..." class="htmx-indicator" width="150" src="/static/bars.svg"/>
+</div>

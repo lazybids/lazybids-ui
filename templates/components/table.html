@@ -1,8 +1,17 @@
-<div id="wrapper"></div>
-<div hx-get="/dataset/{{ds_id}}/subject/{{s_id}}/session/{{exp_id}}/scans_view" hx-trigger="load"></div>
-
+<div id="wrapper_{{ds_id}}_{{s_id}}_{{exp_id}}_{{scans}}"></div>
+{% if scans %}
+{% if exp_id %}
+<div hx-get="/dataset/{{ds_id}}/subject/{{s_id}}/session/{{exp_id}}/scans_view" hx-trigger="load delay:0.3s"></div>
+{% else %}
+<div hx-get="/dataset/{{ds_id}}/subject/{{s_id}}/scans_view" hx-trigger="load delay:0.3s"></div>
+{% endif %}
+{% endif %}
 <script>
-  const grid = new gridjs.Grid({
+  {% if scans %}
+  const grid_{{ds_id|replace("-", "_")}}_{{s_id|replace("-", "_")}}_{{exp_id|replace("-", "_")}}_scans = new gridjs.Grid({
+    {% else %}
+    const grid_{{ds_id|replace("-", "_")}}_{{s_id|replace("-", "_")}}_{{exp_id|replace("-", "_")}} = new gridjs.Grid({
+      {% endif %}
     columns: 
     
     {% if not(scans) %}
@@ -72,5 +81,5 @@
       width: '100%',
       height: '100%',
 
-    }).render(document.getElementById('wrapper'));
+    }).render(document.getElementById('wrapper_{{ds_id}}_{{s_id}}_{{exp_id}}_{{scans}}'));
 </script>

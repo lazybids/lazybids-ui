@@ -1,20 +1,22 @@
 {% if dataset.state == 'SUCCESS' %}
     
 
-<a hx-get="/dataset/{{dataset.id}}" hx-target="#main_view" hx-push-url="/index/dataset/{{dataset.id}}" hx-indicator="#spinner">
+<a hx-get="/dataset/{{dataset.id}}" hx-target="#main_view" hx-push-url="/index/dataset/{{dataset.id}}" hx-indicator="#spinner_{{dataset.id}}">
   <div class="card w-64 bg-neutral shadow-xl">
     <figure>{{dataset.icon|safe}}</figure>
     <div class="card-body">
       <h2 class="card-title">
         {{dataset.id}}) {{dataset.name}}
         <div class="badge badge-secondary">{{size}}GB</div>
+        <img  id="spinner_{{dataset.id}}" class="htmx-indicator" src="/static/bars.svg" style="width: 30px; height: 30px;"/>
       </h2>
       <p>{{dataset.description}}</p>
       <div class="card-actions justify-end">
         <div class="text-sm rounded-md outline text-wrap break-words p-2 mt-8 max-w-52">{{dataset.folder}}</div>
       </div>
-      <div id="spinner">
-        <div>
+      
+        
+        
     </div>
     </div>
     </div>
@@ -47,7 +49,11 @@
     </h2>
     <div class="text-left items-left animate-pulse">
       <img alt="Result loading..." width="120" src="/static/bars.svg"/>
-      <p class="text-lg"> Loading dataset... </p>
+      {% if size == '0.00' %}
+      <p class="text-lg"> Indexing files... </p>
+      {% else %}
+      <p class="text-lg"> Downloading files... </p>
+      {% endif %}
     <div class="card-actions justify-end">
       <div class="text-sm rounded-md outline text-wrap break-words p-2 mt-8 max-w-52">{{dataset.folder}}</div>
     </div>

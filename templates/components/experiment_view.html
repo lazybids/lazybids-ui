@@ -35,7 +35,7 @@
     <div class="flex flex-wrap gap-2 columns-8">
         {% for key, value in meta_data.items() %}
         <!-- Folder Card -->
-        {% if key not in ['participant_id', 'age','sex']%}
+        {% if key not in ['participant_id', 'age','sex', 'path_vars_keys','n_scans']%}
         {% if value %}
         <div class="card bg-neutral shadow-xl m-0 p-0 shrink">
             <div class="card-body my-2 mx-4 p-0 shrink tracking-tight gap-0 max-w-2xl">
