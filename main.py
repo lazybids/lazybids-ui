@@ -280,6 +280,8 @@ async def get_sessions(request: Request, ds_id:int, s_id:str, session: Session =
             ds = get_ds(dataset.folder)
             subject = [s for s in ds.subjects if s.participant_id==s_id][0]
             df = pd.DataFrame([s.all_meta_data for s in subject.experiments])
+            if not len(df)>0:
+                return ''
 
             if 'session_id' in df.columns.tolist():
                 df['participant_id'] = subject.participant_id
@@ -334,7 +336,6 @@ async def get_session(request: Request, ds_id:int, s_id:str, exp_id:str, session
 
     
 @app.get("/dataset/{ds_id}/subject/{s_id}/session/{exp_id}/scans", response_class=HTMLResponse)
-@jinja.hx("components/table.html")
 async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, session: Session = Depends(get_db)):
     # try:
         if not('hx-request' in request.headers.keys()):
@@ -348,9 +349,9 @@ async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, session: 
             print(s_id)
             subject = [s for s in ds.subjects if s.participant_id==s_id][0]
             experiment = [e for e in subject.experiments if e.session_id==exp_id][0]
-            df = pd.DataFrame([s.all_meta_data for s in experiment.scans.values()])
-
-            
+            df = pd.DataFrame([s.all_meta_data for s in experiment.scans.values()])     
+            if not(len(df)>0):
+                return ''       
             columns = df.columns.tolist()
             
             if 'name' in columns:
@@ -359,6 +360,7 @@ async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, session: 
 
             
             context = {
+                    "request": request,
                     'df' : df.astype(str).to_json(orient='records', default_handler=str),
                     'ds_id':ds_id,
                     's_id': s_id,
@@ -366,11 +368,10 @@ async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, session: 
                     'columns': columns,
                     'scans': True,
                     }
-            return context 
+            return templates.TemplateResponse("components/table.html", context ) 
     
 
 @app.get("/dataset/{ds_id}/subject/{s_id}/scans", response_class=HTMLResponse)
-@jinja.hx("components/table.html")
 async def get_scans(request: Request, ds_id:int, s_id:str, session: Session = Depends(get_db)):
     # try:
         if not('hx-request' in request.headers.keys()):
@@ -385,7 +386,8 @@ async def get_scans(request: Request, ds_id:int, s_id:str, session: Session = De
             subject = [s for s in ds.subjects if s.participant_id==s_id][0]
             
             df = pd.DataFrame([s.all_meta_data for s in subject.scans.values()])
-
+            if not(len(df>0)):
+                return 'No scans found for this subject'       
             
             columns = df.columns.tolist()
             
@@ -395,6 +397,7 @@ async def get_scans(request: Request, ds_id:int, s_id:str, session: Session = De
 
             
             context = {
+                    "request": request,
                     'df' : df.astype(str).to_json(orient='records', default_handler=str),
                     'ds_id':ds_id,
                     's_id': s_id,
@@ -402,7 +405,7 @@ async def get_scans(request: Request, ds_id:int, s_id:str, session: Session = De
                     'columns': columns,
                     'scans': True,
                     }
-            return context 
+            return templates.TemplateResponse("components/table.html", context ) 
 
 def short_fname(fname):
     return os.path.split(str(fname))[-1]
