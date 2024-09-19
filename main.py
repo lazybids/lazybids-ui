@@ -11,9 +11,7 @@ from fastapi import FastAPI, Request, Header, Form, UploadFile, Depends
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fasthx import Jinja
 
-jinja = Jinja(Jinja2Templates("templates"))
 import lazybids
 from dotenv import load_dotenv, dotenv_values 
 # loading variables from .env file
@@ -67,41 +65,25 @@ async def error(request, e):
 @app.get("/", response_class=HTMLResponse)
 @app.get("/index/{str}", response_class=HTMLResponse)
 @app.get("/index/{str}/{str2}", response_class=HTMLResponse)
-@jinja.page("root.html")
-async def root(url:str='', url2:str=''):
+async def root(request: Request, url:str='', url2:str=''):
     if not(url):
         context = {'mainViewURL':'/datasets'}
     elif not(url2):
         context = {'mainViewURL':f'/{url}'}        
     else:
         context = {'mainViewURL':f'/{url}/{url2}'}     
-    return context
+    context['request'] = request
+    return templates.TemplateResponse("root.html", context)
 
 
 @app.get("/datasets")
-@jinja.hx("components/datasets.html")
-async def datasets(session: Session = Depends(get_db)):
+async def datasets(request: Request, session: Session = Depends(get_db)):
     statement = select(models.Dataset)
     datasets = session.exec(statement).all()
-    # for dataset in datasets:
-    #     if dataset.taskID:
-    #         if dataset.state in ['SUCCESS','FAILURE']:
-    #             continue
-    #         else:
-    #             task = worker.openneuro_download.AsyncResult(dataset.taskID)
-    #             dataset.state = task.state
-    #             session.add(dataset)
-    #             session.commit()
-    #     if not(dataset.taskID) and dataset.state != 'SUCCESS':
-    #             dataset.state = 'SUCCESS'
-    #             session.add(dataset)
-    #             session.commit()
-
-    context = {'datasets':datasets}
-    return context
+    context = {'datasets':datasets, 'request':request}
+    return templates.TemplateResponse("components/datasets.html", context)
 
 @app.get("/dataset_card/{ds_id}")
-@jinja.hx("components/dataset_card.html", no_data=True)
 def dataset_card(request: Request, ds_id:int,session: Session = Depends(get_db)):
     statement = select(models.Dataset).where(models.Dataset.id==ds_id)
     dataset = session.exec(statement).first()
@@ -121,13 +103,12 @@ def dataset_card(request: Request, ds_id:int,session: Session = Depends(get_db))
      
     folder = Path(dataset.folder)
     size = f"{sum(f.stat().st_size for f in folder.glob('**/*') if f.is_file())/2**30:.2f}"
-    context = {'dataset':dataset, 'size':size}
+    context = {'dataset':dataset, 'size':size, 'request':request}
         
-    return context
+    return templates.TemplateResponse("components/dataset_card.html", context)
 
 
 @app.post("/datasets/create", response_class=HTMLResponse)
-@jinja.hx("components/redirect_home.html")
 async def create_dataset(request: Request, 
                          name: str = Form(...), 
                          folder: Optional[str] = Form(None), 
@@ -170,7 +151,7 @@ async def create_dataset(request: Request,
     session.add(dataset)
     session.commit()
     print('return dataset')
-    return
+    return templates.TemplateResponse("components/redirect_home.html", context = {'request':request})
 
 
 @functools.lru_cache(maxsize=12)
@@ -203,7 +184,6 @@ def to_session_url(subject_id,session_id, ds_id ):
 
 
 @app.get("/dataset/{ds_id}/subjects", response_class=HTMLResponse)
-@jinja.hx("components/table.html")
 async def get_subjects(request: Request, ds_id:int, session: Session = Depends(get_db)):
     if not('hx-request' in request.headers.keys()):
         context = {"request": request,'mainViewURL':f"/dataset/{ds_id}"}
@@ -233,12 +213,12 @@ async def get_subjects(request: Request, ds_id:int, session: Session = Depends(g
                     'ds_id': ds_id,
                     's_id': '',
                     'exp_id': '',
+                    'request':request
                    }
-        return context 
+        return templates.TemplateResponse("components/table.html", context)  
 
 
 @app.get("/dataset/{ds_id}/subject/{s_id}", response_class=HTMLResponse)
-#@jinja.hx("components/subject_view.html")
 async def get_subject(request: Request, ds_id:int, s_id:str, session: Session = Depends(get_db)):
     #try:
         if not('hx-request' in request.headers.keys()):
@@ -266,7 +246,6 @@ async def get_subject(request: Request, ds_id:int, s_id:str, session: Session = 
 
 
 @app.get("/dataset/{ds_id}/subject/{s_id}/sessions", response_class=HTMLResponse)
-@jinja.hx("components/table.html")
 async def get_sessions(request: Request, ds_id:int, s_id:str, session: Session = Depends(get_db)):
     try:
         if not('hx-request' in request.headers.keys()):
@@ -298,9 +277,10 @@ async def get_sessions(request: Request, ds_id:int, s_id:str, session: Session =
                     'ds_id': ds_id,
                     's_id': s_id,
                     'exp_id': '',
-                    'scans': False
+                    'scans': False,
+                    'request':request
                     }
-            return context 
+            return templates.TemplateResponse("components/table.html", context) 
     
     except Exception as e:
         return templates.TemplateResponse("components/error.html", context = {"request": request,'error':e} )
@@ -308,7 +288,6 @@ async def get_sessions(request: Request, ds_id:int, s_id:str, session: Session =
 
 
 @app.get("/dataset/{ds_id}/subject/{s_id}/session/{exp_id}", response_class=HTMLResponse)
-#@jinja.hx("components/subject_view.html")
 async def get_session(request: Request, ds_id:int, s_id:str, exp_id:str, session: Session = Depends(get_db)):
     #try:
         if not('hx-request' in request.headers.keys()):
@@ -439,7 +418,6 @@ async def get_scans(request: Request, ds_id:int, s_id:str, scan_id:str, fname:st
 
 
 @app.get("/dataset/{ds_id}/subject/{s_id}/session/{exp_id}/scans_view", response_class=HTMLResponse)
-@jinja.hx("components/scans.html")
 async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, session: Session = Depends(get_db)):
     # try:
         if not('hx-request' in request.headers.keys()):
@@ -463,12 +441,12 @@ async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, session: 
                     'exp_id': exp_id,
                     'scans': scans,
                     'tables':tables,
+                    'request':request
                     }
-            return context 
+            return templates.TemplateResponse("components/scans.html", context) 
     
 
 @app.get("/dataset/{ds_id}/subject/{s_id}/scans_view", response_class=HTMLResponse)
-@jinja.hx("components/scans.html")
 async def get_scans(request: Request, ds_id:int, s_id:str, session: Session = Depends(get_db)):
     # try:
         if not('hx-request' in request.headers.keys()):
@@ -491,6 +469,7 @@ async def get_scans(request: Request, ds_id:int, s_id:str, session: Session = De
                     's_id': s_id,
                     'scans': scans,
                     'tables':tables,
+                    'request':request
                     }
-            return context 
+            return templates.TemplateResponse("components/scans.html", context) 
     

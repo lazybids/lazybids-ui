@@ -7,18 +7,17 @@ readme = "README.md"
 packages = [{include = "lazybids_ui"}]
 
 [tool.poetry.dependencies]
-python = "<3.12,>=3.10"
+python = "<3.12,>=3.8"
 lazybids = {git = "https://github.com/roelant001/lazybids.git"}
 fastapi = {extras = ["all"], version = "^0.111.0"}
 pydantic = "^2.7.4"
 sqlmodel = "^0.0.19"
-openneuro-py = "^2024.2.0"
+openneuro-py = "^2023.1.0"
 py7zr = "^0.21.0"
 pillow = "^10.4.0"
 celery = "^5.4.0"
 redis = "^5.0.7"
 pretty-html-table = "^0.9.16"
-fasthx = "^0.2403.1"
 pytailwindcss-extra = "^0.1.0"
 
 [tool.poetry.group.dev.dependencies]
