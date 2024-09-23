@@ -1,20 +1,26 @@
 <div class="flex-row w-full justify-between flex flex-row">
   <h2 class="text-xl text-white">Scan views:</h2>
-  <div class="form-control w-36">
+  <div class="form-control w-56">
     <label class="label cursor-pointer">
+      <span class="label-text">Multiplanar</span>
+      <input
+        type="checkbox"
+        class="toggle toggle-secondary"
+        id="3DToggle"
+      />
       <span class="label-text">Sync scans</span>
       <input
         type="checkbox"
         class="toggle toggle-secondary"
         checked="checked"
-        id="rememberMeToggle"
+        id="SyncToggle"
       />
     </label>
   </div>
 </div>
 <script>
   document
-    .getElementById("rememberMeToggle")
+    .getElementById("SyncToggle")
     .addEventListener("change", function () {
       if (this.checked) {
         // Code to run when the checkbox is checked
@@ -34,12 +40,37 @@
         }
       }
     });
+    document
+    .getElementById("3DToggle")
+    .addEventListener("change", function () {
+      if (this.checked) {
+        // Code to run when the checkbox is checked
+        for (var i = 0; i < all_nvs.length; i++) {
+            all_nvs[i].setSliceType(all_nvs[i].sliceTypeMultiPlanar);
+        // Toggle max-height for scans and table classes
+        document.querySelectorAll('.max-h-\\[20rem\\]').forEach(function(element) {
+          element.classList.remove('max-h-[20rem]');
+          element.classList.add('max-h-[50rem]');
+        });
+        }
+      } else {
+        // Code to run when the checkbox is unchecked
+        for (var i = 0; i < all_nvs.length; i++) {
+          all_nvs[i].setSliceType(all_nvs[i].sliceTypeAxial);
+        // Toggle max-height for scans and table classes
+        document.querySelectorAll('.max-h-\\[50rem\\]').forEach(function(element) {
+          element.classList.remove('max-h-[50rem]');
+          element.classList.add('max-h-[20rem]');
+        });
+        }
+      }
+    });
 </script>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 justify-items-center width-full">
   {% for scan in scans %}
   <div
-    class="max-h-[50rem] w-11/12 grow pb-16 m-4 rounded-lg bg-black shadow-2xl shadow-teal-500/50"
+    class="max-h-[20rem] w-11/12 grow pb-16 m-4 rounded-lg bg-black shadow-2xl shadow-teal-500/50"
   >
     <p class="px-8 py-2">{{scan.name}}</p>
     <canvas
@@ -55,7 +86,7 @@
   </div>
   {% endfor %} {% for table in tables %}
   <div
-    class="max-h-[50rem] w-11/12 grow pb-16 m-4 rounded-lg bg-black shadow-2xl shadow-teal-500/50 p-8"
+    class="max-h-[20rem] w-11/12 grow pb-16 m-4 rounded-lg bg-black shadow-2xl shadow-teal-500/50 p-8"
   >
     <p class="px-8 py-2">{{table.name}}.table</p>
     <div class="overflow-auto">{{table.table | safe}}</div>
@@ -64,6 +95,10 @@
 </div>
 
 <script async defer>
+  async function loadVolumesAsync(nv, volumeList) {
+    await nv.loadVolumes(volumeList);
+  }
+
   var all_nvs = [];
   {% for scan in scans %}
   var volumeList = [
@@ -74,6 +109,7 @@
       {% else %}
       url: "/dataset/{{ds_id}}/subject/{{s_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
       {% endif %}
+      trustCalMinMax: true,
       // name: "some_image",
       // colorMap: "gray",
       // opacity: 1,
@@ -84,9 +120,11 @@
   // Niivue will adjust the canvas to 100% of its parent container's size
   // the parent element can be any size you want (small or large)
   var nv = new window.niivue.Niivue()
+  nv.setSliceType(nv.sliceTypeAxial);
   nv.attachTo('{{scan.name}}') // the canvas element id
-  nv.loadVolumes(volumeList)
-  all_nvs.push(nv)
+  loadVolumesAsync(nv, volumeList).then(() => {
+    all_nvs.push(nv)
+  });
   {% endfor %}
   for (var i = 0; i < all_nvs.length; i++) {
     var all_other_nvs = [];

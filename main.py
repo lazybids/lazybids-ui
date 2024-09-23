@@ -32,19 +32,15 @@ import hashlib
 
 from pretty_html_table import build_table
 
-def get_db():
-    session = Session(engine)
-    try:
-        yield session
-    finally:
-        session.close()
-
+from src.models import get_db, engine, get_ds
+from src import rest_api
 
 
 
 app = FastAPI()
+app.include_router(rest_api.router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
-engine = create_engine("sqlite:///database.db")
+
 templates = Jinja2Templates(directory="templates")
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -78,9 +74,7 @@ async def root(request: Request, url:str='', url2:str=''):
 
 @app.get("/datasets")
 async def datasets(request: Request, session: Session = Depends(get_db)):
-    statement = select(models.Dataset)
-    datasets = session.exec(statement).all()
-    context = {'datasets':datasets, 'request':request}
+    context = {'datasets':await rest_api.get_datasets(session), 'request':request}
     return templates.TemplateResponse("components/datasets.html", context)
 
 @app.get("/dataset_card/{ds_id}")
@@ -154,10 +148,7 @@ async def create_dataset(request: Request,
     return templates.TemplateResponse("components/redirect_home.html", context = {'request':request})
 
 
-@functools.lru_cache(maxsize=12)
-def get_ds(folder):
-    ds = lazybids.Dataset.from_folder(folder, load_scans_in_memory=False)
-    return ds
+
 
 @app.get("/dataset/{ds_id}", response_class=HTMLResponse)
 async def get_dataset(request: Request, ds_id:int):
@@ -165,15 +156,10 @@ async def get_dataset(request: Request, ds_id:int):
         context = {"request": request,'mainViewURL':f"/dataset/{ds_id}"}
         return templates.TemplateResponse("root.html", context )
     else:
-        with Session(engine) as session:
-            statement = select(models.Dataset).where(models.Dataset.id==ds_id)
-            dataset = session.exec(statement).first()
-        try:
-            ds = get_ds(dataset.folder)
-        except Exception as e:
-            return templates.TemplateResponse("components/error.html", context = {"request": request,'error':e} )
+        dataset = await rest_api.get_dataset(ds_id)
         
-        return templates.TemplateResponse("components/dataset_view.html", context = {"request": request,'dataset':dataset,'meta_data':ds.all_meta_data} )
+        context = {"request": request,'dataset_id':ds_id,'dataset':dataset,'meta_data':dataset.all_meta_data}
+        return templates.TemplateResponse("components/dataset_view.html", context=context )
 
 def to_subject_url(subject_id, ds_id ):
     return f"<a class='btn btn-outline btn-primary btn-xs' href='/dataset/{ds_id}/subject/{subject_id}' hx-target='#main_view'>{subject_id}</a>"
@@ -190,23 +176,15 @@ async def get_subjects(request: Request, ds_id:int, session: Session = Depends(g
         return templates.TemplateResponse("root.html", context )
     else:
         
-        statement = select(models.Dataset).where(models.Dataset.id==ds_id)
-        dataset = session.exec(statement).first()
-        try:
-            ds = get_ds(dataset.folder)
-            df = pd.DataFrame([s.all_meta_data for s in ds.subjects])
-            columns = df.columns.tolist()
-            if 'session_id' in df.columns.tolist():
-                df['session_id'] = df[['participant_id', 'session_id']].apply(lambda x: to_session_url(x['participant_id'], x['session_id'], ds_id), axis=1)
-                columns.remove('session_id')
-            df['participant_id'] = df['participant_id'].apply(to_subject_url, ds_id=ds_id)
-            columns.remove('participant_id')
+        subjects = await rest_api.get_subjects(ds_id)
+        df = pd.DataFrame(subjects)
+        columns = df.columns.tolist()
+        if 'session_id' in df.columns.tolist():
+            df['session_id'] = df[['participant_id', 'session_id']].apply(lambda x: to_session_url(x['participant_id'], x['session_id'], ds_id), axis=1)
+            columns.remove('session_id')
+        df['participant_id'] = df['participant_id'].apply(to_subject_url, ds_id=ds_id)
+        columns.remove('participant_id')
             
-
-
-        except Exception as e:
-            return templates.TemplateResponse("components/error.html", context = {"request": request,'error':e} )
-        
         context = {
                    'df' : df.astype(str).to_json(orient='records', default_handler=str),
                    'columns': columns,
@@ -225,20 +203,14 @@ async def get_subject(request: Request, ds_id:int, s_id:str, session: Session = 
             context = {"request": request,'mainViewURL':f"/dataset/{ds_id}/subject/{s_id}"}
             return templates.TemplateResponse("root.html", context )
         else:
-            with Session(engine) as session:
-                statement = select(models.Dataset).where(models.Dataset.id==ds_id)
-                dataset = session.exec(statement).first()
-                ds = get_ds(dataset.folder)
-                subject = [s for s in ds.subjects if s.participant_id==s_id][0]
+            dataset = await rest_api.get_dataset(ds_id)
+            subjects = await rest_api.get_subjects(ds_id, session)
+            subject = [s for s in subjects if s.participant_id==s_id][0]
                 
-
-                
-
-
         return templates.TemplateResponse("components/subject_view.html", 
                                           context = {"request": request,
                                                      'dataset':dataset,
-                                                     'meta_data':subject.all_meta_data} )
+                                                     'meta_data':subject} )
     
     # except Exception as e:
     #     return templates.TemplateResponse("components/error.html", context = {"request": request,'error':e} )
@@ -399,9 +371,19 @@ async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, scan_id:s
     subject = [s for s in ds.subjects if s.participant_id==s_id][0]
     experiment = [e for e in subject.experiments if e.session_id==exp_id][0]
     scan = [s for s in experiment.scans.values() if s.name==scan_id][0]
+    file_path = [f for f in scan.files if short_fname(f)==fname][0]
     
+    if fname.endswith('.gz'):
+        import gzip
+        import shutil
+        tmp_dir = tempfile.mkdtemp()
+        unzipped_file_path = os.path.join(tmp_dir, fname[:-3])  # Remove .gz extension
+        with gzip.open(file_path, 'rb') as f_in:
+            with open(unzipped_file_path, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        return unzipped_file_path
 
-    return [f for f in scan.files if short_fname(f)==fname][0]
+    return file_path
 
 
 @app.get("/dataset/{ds_id}/subject/{s_id}/scan/{scan_id}/files/{fname}", response_class=FileResponse)
@@ -413,12 +395,23 @@ async def get_scans(request: Request, ds_id:int, s_id:str, scan_id:str, fname:st
     print(s_id)
     subject = [s for s in ds.subjects if s.participant_id==s_id][0]
     scan = [s for s in subject.scans.values() if s.name==scan_id][0]
+    file_path = [f for f in scan.files if short_fname(f)==fname][0]
+    
+    if fname.endswith('.gz'):
+        import gzip
+        import shutil
+        tmp_dir = tempfile.mkdtemp()
+        unzipped_file_path = os.path.join(tmp_dir, fname[:-3])  # Remove .gz extension
+        with gzip.open(file_path, 'rb') as f_in:
+            with open(unzipped_file_path, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        return unzipped_file_path
 
-    return [f for f in scan.files if short_fname(f)==fname][0]
+    return file_path
 
 
 @app.get("/dataset/{ds_id}/subject/{s_id}/session/{exp_id}/scans_view", response_class=HTMLResponse)
-async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, session: Session = Depends(get_db)):
+async def get_scans_view(request: Request, ds_id:int, s_id:str, exp_id:str, session: Session = Depends(get_db)):
     # try:
         if not('hx-request' in request.headers.keys()):
             context = {"request": request,'mainViewURL':f"/dataset/{ds_id}/subject/{s_id}/session/{exp_id}/scans"}
@@ -447,7 +440,7 @@ async def get_scans(request: Request, ds_id:int, s_id:str, exp_id:str, session: 
     
 
 @app.get("/dataset/{ds_id}/subject/{s_id}/scans_view", response_class=HTMLResponse)
-async def get_scans(request: Request, ds_id:int, s_id:str, session: Session = Depends(get_db)):
+async def get_scans_view(request: Request, ds_id:int, s_id:str, session: Session = Depends(get_db)):
     # try:
         if not('hx-request' in request.headers.keys()):
             context = {"request": request,'mainViewURL':f"/dataset/{ds_id}/subject/{s_id}/session/{exp_id}/scans"}

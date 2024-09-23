@@ -11,6 +11,21 @@ from sqlmodel import Field, Session, SQLModel, create_engine
 from pathlib import Path
 from src.random_image import generateCharacter
 import uuid
+import functools
+import lazybids
+
+engine = create_engine("sqlite:///database.db")
+@functools.lru_cache(maxsize=12)
+def get_ds(folder):
+    ds = lazybids.Dataset.from_folder(folder, load_scans_in_memory=False)
+    return ds
+
+def get_db():
+    session = Session(engine)
+    try:
+        yield session
+    finally:
+        session.close()
 
 class Dataset(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
