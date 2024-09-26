@@ -19,6 +19,7 @@ celery = "^5.4.0"
 redis = "^5.0.7"
 pretty-html-table = "^0.9.16"
 pytailwindcss-extra = "^0.1.0"
+scalar-fastapi = "^1.0.3"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.2.2"

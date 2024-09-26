@@ -1,0 +1,70 @@
+<a hx-get="/dataset/{{dataset.id}}/subject/{{meta_data.participant_id}}" hx-target="#main_view">
+    <div class="flex flex-col sm:flex-row">
+        <div class="flex-none grow-0 w-12 h-10 sm:w-48 sm:h-32">
+            <figure class="scale-50 sm:scale-100 -translate-y-20 sm:-translate-y-10 -translate-x-4">{{dataset.icon|safe}}</figure>
+        </div>
+        <div class="grow">
+            <div class="flex md:flex-row flex-wrap">
+                <h1 class="text-4xl font-bold">{{ meta_data.participant_id }} | </h1>
+
+                {% if 'age' in meta_data %}
+                <h1 class="text-4xl px-8 pb-4">Age: {{meta_data.age}}</h1>
+                {% endif %}
+                {% if 'sex' in meta_data %}
+                <h1 class="text-4xl px-4 pb-4">Sex: {{meta_data.sex}}</h1>
+                {% endif %}
+                <div>
+                    <a hx-get="/dataset/{{dataset.id}}/subject/{{meta_data.participant_id}}/session/{{meta_data.session_id}}" hx-target="#main_view">{{meta_data.session_id}} </a>
+                </div>
+    
+            </div>
+
+                
+
+
+        </div>
+    </div>
+</a>
+<div class="divider my-0"></div>
+<details class="collapse bg-base-200">
+    <summary class="collapse-title text-xl font-medium">Details (expand)</summary>
+    <div class="collapse-content">
+
+<div class="container mx-auto my-2">
+
+    <div class="flex flex-wrap gap-2 columns-8">
+        {% for key, value in meta_data.items() %}
+        <!-- Folder Card -->
+        {% if key not in ['participant_id', 'age','sex', 'path_vars_keys','n_scans']%}
+        {% if value %}
+        <div class="card bg-neutral shadow-xl m-0 p-0 shrink">
+            <div class="card-body my-2 mx-4 p-0 shrink tracking-tight gap-0 max-w-2xl">
+                <h2 class="card-title mb-0">{{key.replace('_',' ')|capitalize}}</h2>
+                {% if value is string %}
+                <p class="text-sm">{{ value }}</p>
+                {% elif value is mapping %}
+                {% for k,v in value.items() %}
+                <li class="text-sm">{{k}}) {{v}}</li>
+                {% endfor %}
+                {% elif value is iterable %}
+                {% for v in value %}
+                <li class="text-sm">{{v}}</li>
+                {% endfor %}
+                {% else %}
+                <p class="text-sm">{{ value }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+
+    </div>
+</div>
+</div>
+</details>
+<div class="divider my-0"></div>
+<h1 class="text-xl text-white">Scans:</h1>
+<div hx-get="/dataset/{{dataset.id}}/subject/{{meta_data.participant_id}}/session/{{meta_data.session_id}}/scans" hx-trigger="load">
+    <img  alt="Result loading..." class="htmx-indicator" width="150" src="/static/bars.svg"/>
+</div>

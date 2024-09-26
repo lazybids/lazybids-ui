@@ -1,6 +1,6 @@
 <div class="flex-row w-full justify-between flex flex-row">
   <h2 class="text-xl text-white">Scan views:</h2>
-  <div class="form-control w-56">
+  <div class="form-control w-64">
     <label class="label cursor-pointer">
       <span class="label-text">Multiplanar</span>
       <input
@@ -18,25 +18,33 @@
     </label>
   </div>
 </div>
+<div>
+<p class="flex flex-row items-center text-center">
+<svg class="h-8 w-8 text-white-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+</svg>
+<span>Double click + drag to adjust brightness</span>
+</p>
+</div>
 <script>
   document
     .getElementById("SyncToggle")
     .addEventListener("change", function () {
       if (this.checked) {
         // Code to run when the checkbox is checked
-        for (var i = 0; i < all_nvs.length; i++) {
+        for (var i = 0; i < resolved_nvs.length; i++) {
           var all_other_nvs = [];
-          for (var ii = 0; ii < all_nvs.length; ii++) {
+          for (var ii = 0; ii < resolved_nvs.length; ii++) {
             if (!(i === ii)) {
-              all_other_nvs.push(all_nvs[ii]);
+              all_other_nvs.push(resolved_nvs[ii]);
             }
-            all_nvs[i].broadcastTo(all_other_nvs, { "3d": true, "2d": true });
+            resolved_nvs[i].broadcastTo(all_other_nvs, { "3d": true, "2d": true });
           }
         }
       } else {
         // Code to run when the checkbox is unchecked
-        for (var i = 0; i < all_nvs.length; i++) {
-          all_nvs[i].broadcastTo([], { "3d": false, "2d": false });
+        for (var i = 0; i < resolved_nvs.length; i++) {
+          resolved_nvs[i].broadcastTo([], { "3d": false, "2d": false });
         }
       }
     });
@@ -45,8 +53,8 @@
     .addEventListener("change", function () {
       if (this.checked) {
         // Code to run when the checkbox is checked
-        for (var i = 0; i < all_nvs.length; i++) {
-            all_nvs[i].setSliceType(all_nvs[i].sliceTypeMultiPlanar);
+        for (var i = 0; i < resolved_nvs.length; i++) {
+            resolved_nvs[i].setSliceType(resolved_nvs[i].sliceTypeMultiPlanar);
         // Toggle max-height for scans and table classes
         document.querySelectorAll('.max-h-\\[20rem\\]').forEach(function(element) {
           element.classList.remove('max-h-[20rem]');
@@ -55,8 +63,8 @@
         }
       } else {
         // Code to run when the checkbox is unchecked
-        for (var i = 0; i < all_nvs.length; i++) {
-          all_nvs[i].setSliceType(all_nvs[i].sliceTypeAxial);
+        for (var i = 0; i < resolved_nvs.length; i++) {
+          resolved_nvs[i].setSliceType(resolved_nvs[i].sliceTypeAxial);
         // Toggle max-height for scans and table classes
         document.querySelectorAll('.max-h-\\[50rem\\]').forEach(function(element) {
           element.classList.remove('max-h-[50rem]');
@@ -99,13 +107,24 @@
     await nv.loadVolumes(volumeList);
   }
 
+  async function initializeNiivue(scanName, volumeList) {
+    await window.niivueLoaded; // Wait for niivue to be loaded
+    var nv = new window.niivue.Niivue();
+    nv.setSliceType(nv.sliceTypeAxial);
+    nv.opts.dragMode = nv.dragModes.contrast;
+    nv.attachTo(scanName); // the canvas element id
+    await loadVolumesAsync(nv, volumeList);
+    return nv;
+  }
+
   var all_nvs = [];
+  var resolved_nvs = [];
   {% for scan in scans %}
   var volumeList = [
     // first object in array is background image
     {
-      {% if exp_id %}
-      url: "/dataset/{{ds_id}}/subject/{{s_id}}/session/{{exp_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
+      {% if ses_id %}
+      url: "/dataset/{{ds_id}}/subject/{{s_id}}/session/{{ses_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
       {% else %}
       url: "/dataset/{{ds_id}}/subject/{{s_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
       {% endif %}
@@ -117,27 +136,21 @@
     }
   ]
 
-  // Niivue will adjust the canvas to 100% of its parent container's size
-  // the parent element can be any size you want (small or large)
-  var nv = new window.niivue.Niivue()
-  nv.setSliceType(nv.sliceTypeAxial);
-  nv.attachTo('{{scan.name}}') // the canvas element id
-  loadVolumesAsync(nv, volumeList).then(() => {
-    all_nvs.push(nv)
-  });
+  all_nvs.push(initializeNiivue('{{scan.name}}', volumeList));
   {% endfor %}
-  for (var i = 0; i < all_nvs.length; i++) {
-    var all_other_nvs = [];
-    for (var ii = 0; ii < all_nvs.length; ii++) {
-      if (!(i === ii)) {
-        all_other_nvs.push(all_nvs[ii])
 
+  (async () => {
+    resolved_nvs = await Promise.all(all_nvs);
+    for (let i = 0; i < resolved_nvs.length; i++) {
+      let all_other_nvs = [];
+      for (let ii = 0; ii < resolved_nvs.length; ii++) {
+        if (i !== ii) {
+          all_other_nvs.push(resolved_nvs[ii]);
+        }
       }
-      all_nvs[i].broadcastTo(all_other_nvs, { "3d": true, "2d": true })
+      resolved_nvs[i].broadcastTo(all_other_nvs, { "3d": true, "2d": true });
     }
-    //Do something
-  }
-  // nv.setSliceType(nv.sliceTypeMultiPlanar) // press the "v" key to cycle through views
+  })();
 </script>
 
 <!-- <script type="module" async="">

@@ -16,9 +16,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
     <script type="module" async>
-      import * as niivue from "/static/niivue/index.js"
-      window.niivue=niivue
-      </script>
+      import * as niivue from "/static/niivue/index.js";
+      window.niivueLoaded = new Promise((resolve, reject) => {
+        
+        window.niivue = niivue;
+        resolve();
+      });
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css" rel="stylesheet" type="text/css" />
     <link href="/static/mermaid_dark.css" rel="stylesheet" type="text/css" />
     
