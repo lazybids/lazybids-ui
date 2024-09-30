@@ -125,7 +125,7 @@ def dataset_card(request: Request, ds_id:int,session: Session = Depends(get_db))
      
     folder = Path(dataset.folder)
     size = f"{sum(f.stat().st_size for f in folder.glob('**/*') if f.is_file())/2**30:.2f}"
-    context = {'dataset':dataset, 'size':size, 'request':request}
+    context = {'dataset': dataset, 'ds_id':ds_id, 'size':size, 'request':request}
         
     return templates.TemplateResponse("components/dataset_card.html", context)
 
@@ -186,7 +186,7 @@ async def get_dataset(request: Request, ds_id:int):
     else:
         dataset = await rest_api.get_dataset(ds_id)
         
-        context = {"request": request,'dataset_id':ds_id,'dataset':dataset,'meta_data':dataset.all_meta_data}
+        context = {"request": request,'dataset_id':ds_id,'dataset': dataset,'meta_data': dataset.all_meta_data}
         return templates.TemplateResponse("components/dataset_view.html", context=context )
 
 def to_subject_url(subject_id, ds_id ):
@@ -205,7 +205,7 @@ async def get_subjects(request: Request, ds_id:int, session: Session = Depends(g
     else:
         
         subjects = await rest_api.get_subjects(ds_id)
-        df = pd.DataFrame(subjects)
+        df = pd.DataFrame([subject.all_meta_data for subject in subjects])
         columns = df.columns.tolist()
         if 'session_id' in df.columns.tolist():
             df['session_id'] = df[['participant_id', 'session_id']].apply(lambda x: to_session_url(x['participant_id'], x['session_id'], ds_id), axis=1)
@@ -233,12 +233,13 @@ async def get_subject(request: Request, ds_id:int, s_id:str, session: Session = 
         else:
             dataset = await rest_api.get_dataset(ds_id)
             subjects = await rest_api.get_subjects(ds_id, session)
-            subject = lazybids.Subject([s for s in subjects if s.participant_id==s_id][0])
-                
+            subject = [s for s in subjects if s.participant_id==s_id][0]
+        print(dataset)
         return templates.TemplateResponse("components/subject_view.html", 
                                           context = {"request": request,
-                                                     'dataset':dataset,
-                                                     'meta_data':subject} )
+                                                     'dataset': dataset,
+                                                     'ds_id':ds_id,
+                                                     'meta_data':subject.all_meta_data} )
     
     # except Exception as e:
     #     return templates.TemplateResponse("components/error.html", context = {"request": request,'error':e} )
@@ -296,7 +297,8 @@ async def get_session(request: Request, ds_id:int, s_id:str, ses_id:str, session
         
         return templates.TemplateResponse("components/session_view.html", 
                                         context = {"request": request,
-                                                    'dataset':dataset,
+                                                    'dataset': dataset,
+                                                    'ds_id':ds_id,
                                                     'meta_data':ses.all_meta_data} )
 
 

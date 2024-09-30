@@ -26,53 +26,51 @@ async def get_dataset(ds_id:int, session: Session = Depends(models.get_db)):
     return ds
 
 @router.get("/dataset/{ds_id}/subjects", response_model=List[lazybids.Subject], response_model_exclude_unset=True, 
-            response_model_exclude_none=True, tags=["RESTAPI"])
+            response_model_exclude_none=True, tags=["RESTAPI"], response_model_exclude=["scans", "sessions"])
 async def get_subjects(ds_id:int, session: Session = Depends(models.get_db)):
     ds = await get_dataset(ds_id, session)
-    return [ lazybids.Subject(s.all_meta_data) for s in ds.subjects.values()]
+    return [s for s in ds.subjects.values()]
 
 @router.get("/dataset/{ds_id}/subjects/{sub_id}", response_model=lazybids.Subject, response_model_exclude_unset=True, 
             response_model_exclude_none=True, tags=["RESTAPI"])
 async def get_subject(ds_id:int, sub_id:str, session: Session = Depends(models.get_db)):
     ds = await get_dataset(ds_id, session)
-    return ds.subjects[sub_id].all_meta_data
-
-@router.get("/dataset/{ds_id}/subjects/{sub_id}/sessions", response_model=List[lazybids.Session], response_model_exclude_unset=True, 
-            response_model_exclude_none=True, tags=["RESTAPI"])
-async def get_sessions(ds_id:int, sub_id:str, session: Session = Depends(models.get_db)):
-    ds = await get_dataset(ds_id, session)
-    return [s.all_meta_data for s in ds.subjects[sub_id].sessions.values()]
+    return ds.subjects[sub_id]
 
 @router.get("/dataset/{ds_id}/subjects/{sub_id}/scans",  response_model_exclude_unset=True, 
             response_model_exclude_none=True, tags=["RESTAPI"])
 async def get_subject_scans(ds_id:int, sub_id:str, session: Session = Depends(models.get_db)):
     ds = await get_dataset(ds_id, session)
-    return [s.all_meta_data for s in ds.subjects[sub_id].scans]
+    return [s for s in ds.subjects[sub_id].scans.values()]
+
+@router.get("/dataset/{ds_id}/subjects/{sub_id}/sessions", response_model=List[lazybids.Session], response_model_exclude_unset=True, 
+            response_model_exclude_none=True, tags=["RESTAPI"], response_model_exclude=["scans"])
+async def get_sessions(ds_id:int, sub_id:str, session: Session = Depends(models.get_db)):
+    ds = await get_dataset(ds_id, session)
+    return [s for s in ds.subjects[sub_id].sessions.values()]
 
 @router.get("/dataset/{ds_id}/subjects/{sub_id}/sessions/{ses_id}", response_model=lazybids.Session, response_model_exclude_unset=True, 
             response_model_exclude_none=True, tags=["RESTAPI"])#, response_model_exclude=["parent", "sessions", "scans"])
 async def get_session(ds_id:int, sub_id:str, ses_id:str, session: Session = Depends(models.get_db)):
     ds = await get_dataset(ds_id, session)
-    return ds.subjects[sub_id].sessions[ses_id].all_meta_data
+    return ds.subjects[sub_id].sessions[ses_id]
 
 @router.get("/dataset/{ds_id}/subjects/{sub_id}/sessions/{ses_id}/scans",  response_model_exclude_unset=True, 
             response_model_exclude_none=True, tags=["RESTAPI"])
 async def get_session_scans(ds_id:int, sub_id:str, ses_id:str, session: Session = Depends(models.get_db)):
     ds = await get_dataset(ds_id, session)
-    return [s.all_meta_data for s in ds.subjects[sub_id].sessions[ses_id].scans]
+    return ds.subjects[sub_id].sessions[ses_id].scans
 
 
 def short_fname(fname):
     return os.path.split(str(fname))[-1]
 
-
-@router.get("/dataset/{ds_id}/subject/{s_id}/session/{ses_id}/scan/{scan_id}/files/{fname}", response_class=FileResponse)
+@router.get("/dataset/{ds_id}/subject/{s_id}/session/{ses_id}/scan/{scan_id}/files/{fname}", response_class=FileResponse, tags=["RESTAPI"])
 async def session_get_scan_file(request: Request, ds_id:int, s_id:str, ses_id:str, scan_id:str, fname:str, session: Session = Depends(models.get_db)):
-
-    scans = await get_subject_scans(ds_id, s_id, session)
-    scan = [s for s in scans if s.name==scan_id][0]
+    scans = await get_session_scans(ds_id, s_id, ses_id, session)
+    scan = scans[scan_id]
     file_path = [f for f in scan.files if short_fname(f)==fname][0]
-    
+
     if fname.endswith('.gz'):
         import gzip
         import shutil
@@ -86,10 +84,10 @@ async def session_get_scan_file(request: Request, ds_id:int, s_id:str, ses_id:st
     return file_path
 
 
-@router.get("/dataset/{ds_id}/subject/{s_id}/scan/{scan_id}/files/{fname}", response_class=FileResponse)
+@router.get("/dataset/{ds_id}/subject/{s_id}/scan/{scan_id}/files/{fname}", response_class=FileResponse, tags=["RESTAPI"])
 async def subject_get_scan_file(request: Request, ds_id:int, s_id:str, scan_id:str, fname:str, session: Session = Depends(models.get_db)):
-    subject = await get_subject(ds_id, s_id, session)
-    scan = [s for s in subject.scans.values() if s.name==scan_id][0]
+    scans = await get_subject_scans(ds_id, s_id, session)
+    scan = scans[scan_id]
     file_path = [f for f in scan.files if short_fname(f)==fname][0]
     
     if fname.endswith('.gz'):
@@ -103,3 +101,4 @@ async def subject_get_scan_file(request: Request, ds_id:int, s_id:str, scan_id:s
         return unzipped_file_path
 
     return file_path
+

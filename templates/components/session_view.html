@@ -1,4 +1,4 @@
-<a hx-get="/dataset/{{dataset.id}}/subject/{{meta_data.participant_id}}" hx-target="#main_view">
+<a hx-get="/dataset/{{ds_id}}/subject/{{meta_data.participant_id}}" hx-target="#main_view">
     <div class="flex flex-col sm:flex-row">
         <div class="flex-none grow-0 w-12 h-10 sm:w-48 sm:h-32">
             <figure class="scale-50 sm:scale-100 -translate-y-20 sm:-translate-y-10 -translate-x-4">{{dataset.icon|safe}}</figure>
@@ -14,7 +14,7 @@
                 <h1 class="text-4xl px-4 pb-4">Sex: {{meta_data.sex}}</h1>
                 {% endif %}
                 <div>
-                    <a hx-get="/dataset/{{dataset.id}}/subject/{{meta_data.participant_id}}/session/{{meta_data.session_id}}" hx-target="#main_view">{{meta_data.session_id}} </a>
+                    <a hx-get="/dataset/{{ds_id}}/subject/{{meta_data.participant_id}}/session/{{meta_data.session_id}}" hx-target="#main_view">{{meta_data.session_id}} </a>
                 </div>
     
             </div>
@@ -65,6 +65,6 @@
 </details>
 <div class="divider my-0"></div>
 <h1 class="text-xl text-white">Scans:</h1>
-<div hx-get="/dataset/{{dataset.id}}/subject/{{meta_data.participant_id}}/session/{{meta_data.session_id}}/scans" hx-trigger="load">
+<div hx-get="/dataset/{{ds_id}}/subject/{{meta_data.participant_id}}/session/{{meta_data.session_id}}/scans" hx-trigger="load">
     <img  alt="Result loading..." class="htmx-indicator" width="150" src="/static/bars.svg"/>
 </div>

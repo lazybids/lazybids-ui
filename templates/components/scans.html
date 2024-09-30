@@ -113,7 +113,7 @@
     nv.setSliceType(nv.sliceTypeAxial);
     nv.opts.dragMode = nv.dragModes.contrast;
     nv.attachTo(scanName); // the canvas element id
-    await loadVolumesAsync(nv, volumeList);
+    loadVolumesAsync(nv, volumeList);
     return nv;
   }
 
@@ -124,9 +124,9 @@
     // first object in array is background image
     {
       {% if ses_id %}
-      url: "/dataset/{{ds_id}}/subject/{{s_id}}/session/{{ses_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
+      url: "/api/dataset/{{ds_id}}/subject/{{s_id}}/session/{{ses_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
       {% else %}
-      url: "/dataset/{{ds_id}}/subject/{{s_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
+      url: "/api/dataset/{{ds_id}}/subject/{{s_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
       {% endif %}
       trustCalMinMax: true,
       // name: "some_image",
