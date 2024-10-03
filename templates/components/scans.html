@@ -119,38 +119,47 @@
 
   var all_nvs = [];
   var resolved_nvs = [];
-  {% for scan in scans %}
-  var volumeList = [
-    // first object in array is background image
-    {
-      {% if ses_id %}
-      url: "/api/dataset/{{ds_id}}/subject/{{s_id}}/session/{{ses_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
-      {% else %}
-      url: "/api/dataset/{{ds_id}}/subject/{{s_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
-      {% endif %}
-      trustCalMinMax: true,
-      // name: "some_image",
-      // colorMap: "gray",
-      // opacity: 1,
-      // visible: true,
-    }
-  ]
+  var volumeList = {};
 
-  all_nvs.push(initializeNiivue('{{scan.name}}', volumeList));
+  {% for scan in scans %}
+  // Initialize the array for each scan if it doesn't exist
+  if (!volumeList['{{scan.name}}']) {
+    volumeList['{{scan.name}}'] = [];
+  }
+
+  volumeList['{{scan.name}}'].push({
+    {% if ses_id %}
+    url: "/api/dataset/{{ds_id}}/subject/{{s_id}}/session/{{ses_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
+    {% else %}
+    url: "/api/dataset/{{ds_id}}/subject/{{s_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
+    {% endif %}
+    trustCalMinMax: true,
+    // name: "some_image",
+    // colorMap: "gray",
+    // opacity: 1,
+    // visible: true,
+  });
   {% endfor %}
 
-  (async () => {
-    resolved_nvs = await Promise.all(all_nvs);
-    for (let i = 0; i < resolved_nvs.length; i++) {
-      let all_other_nvs = [];
-      for (let ii = 0; ii < resolved_nvs.length; ii++) {
-        if (i !== ii) {
-          all_other_nvs.push(resolved_nvs[ii]);
+  {% for scan in scans %}
+    setTimeout(() => {
+    all_nvs.push(initializeNiivue('{{scan.name}}', volumeList['{{scan.name}}']));
+    if (all_nvs.length === {{scans|length}}) {
+      (async () => {
+        resolved_nvs = await Promise.all(all_nvs);
+        for (let i = 0; i < resolved_nvs.length; i++) {
+          let all_other_nvs = [];
+          for (let ii = 0; ii < resolved_nvs.length; ii++) {
+            if (i !== ii) {
+              all_other_nvs.push(resolved_nvs[ii]);
+            }
+          }
+          resolved_nvs[i].broadcastTo(all_other_nvs, { "3d": true, "2d": true });
         }
-      }
-      resolved_nvs[i].broadcastTo(all_other_nvs, { "3d": true, "2d": true });
+      })();
     }
-  })();
+  }, 0);
+    {% endfor %}
 </script>
 
 <!-- <script type="module" async="">
