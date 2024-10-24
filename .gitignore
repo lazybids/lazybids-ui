@@ -4,3 +4,4 @@
 node_modules
 src/__pycache__
 test.html
+**/__pycache__/

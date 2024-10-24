@@ -1,0 +1,30 @@
+<!-- Open the modal using ID.showModal() method -->
+
+<dialog id="edit-modal" class="modal modal-bottom sm:modal-middle min-w-96">
+  <div class="modal-box">
+    <div id="modal-content">
+      <!-- Content will be loaded here -->
+    </div>
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn">Close</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<div class="flex-col">
+  <div class="flex flex-row justify-between">
+    <h1 class="text-3xl text-white align-bottom py-2">Datasets:</h1>
+    <button class="btn btn-primary btn-active" onclick="my_modal_5.showModal()">
+      Create new
+    </button>
+    {% include 'components/create_dataset.html' %}
+  </div>
+  <div class="divider text-xl text-white"></div>
+  <div class="flex gap-4 justify-items-center flex-wrap ">
+    {% for dataset in datasets %}
+      <div hx-get="/html/dataset_card/{{ dataset.id }}" hx-trigger="load"></div>
+    {% endfor %}
+  </div>
+</div>

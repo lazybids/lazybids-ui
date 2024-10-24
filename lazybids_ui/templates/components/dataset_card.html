@@ -1,0 +1,103 @@
+{% macro edit_button(ds_id) %}
+  <button
+    class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+    hx-get="/html/dataset/{{ ds_id }}/edit"
+    hx-target="#modal-content"
+    hx-trigger="click"
+    _="on htmx:afterOnLoad wait 10ms then call document.getElementById('edit-modal').showModal()"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+    </svg>
+  </button>
+{% endmacro %}
+
+
+{% if dataset.state.value == 'SUCCESS' %}
+  <div class="card w-64 bg-neutral shadow-xl relative">
+    {{ edit_button(ds_id) }}
+    <div class="badge badge-secondary m-4">{{ size }}GB</div>
+    <a
+      hx-get="/html/dataset/{{ ds_id }}"
+      hx-target="#main_view"
+      hx-push-url="/index/dataset/{{ ds_id }}"
+      hx-indicator="#spinner_{{ ds_id }}"
+      class="block"
+    >
+      <figure>{{ dataset.icon|safe }}</figure>
+      <div class="card-body">
+        <h2 class="card-title">
+          {{ ds_id }}) {{ dataset.name }}
+          
+          <img
+            id="spinner_{{ ds_id }}"
+            class="htmx-indicator"
+            src="/static/bars.svg"
+            style="width: 30px; height: 30px;"
+          />
+        </h2>
+        <p>{{ dataset.description }}</p>
+        <div class="card-actions justify-end">
+          <div
+            class="text-sm rounded-md outline text-wrap break-words p-2 mt-8 max-w-52"
+          >
+            {{ dataset.folder }}
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+{% elif dataset.state.value == 'FAILURE' %}
+  <div class="card w-64 bg-neutral shadow-xl relative">
+    {{ edit_button(ds_id) }}
+    <div class="badge badge-secondary m-4">{{ size }}GB</div>
+    <figure>{{ dataset.icon|safe }}</figure>
+    <div class="card-body">
+      <h2 class="card-title">
+        {{ ds_id }}) {{ dataset.name }}
+        
+      </h2>
+      <h3 class="text-red-700">FAILED TO LOAD!!</h3>
+      <p>{{ dataset.description }}</p>
+      <div class="card-actions justify-end">
+        <div
+          class="text-sm rounded-md outline text-wrap break-words p-2 mt-8 max-w-52"
+        >
+          {{ dataset.folder }}
+        </div>
+      </div>
+    </div>
+  </div>
+{% elif dataset.state.value in ['PENDING', 'RUNNING'] %}
+  <div
+    class="card w-64 bg-neutral shadow-xl relative"
+    hx-get="/html/dataset_card/{{ ds_id }}"
+    hx-trigger="load delay:4s"
+    hx-swap="outerHTML"
+  >
+    {{ edit_button(ds_id) }}
+    <div class="badge badge-secondary m-4">{{ size }}GB</div>
+    <figure>{{ dataset.icon|safe }}</figure>
+    <div class="card-body">
+      <h2 class="card-title">
+        {{ ds_id }}) {{ dataset.name }}
+        
+      </h2>
+      <div class="text-left items-left animate-pulse">
+        <img alt="Result loading..." width="80" src="/static/bars.svg" />
+        {% if size == '0.00' %}
+          <p class="text-lg">Indexing files...</p>
+        {% else %}
+          <p class="text-lg">Downloading files...</p>
+        {% endif %}
+        <div class="card-actions justify-end">
+          <div
+            class="text-sm rounded-md outline text-wrap break-words p-2 mt-8 max-w-52"
+          >
+            {{ dataset.folder }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}

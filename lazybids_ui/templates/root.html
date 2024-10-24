@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LazyBIDS-UI</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%234A90E2' /><text x='50' y='55' font-family='Arial, sans-serif' font-size='40' fill='%23fff' text-anchor='middle' alignment-baseline='middle'>LB</text></svg>" type="image/svg+xml" />
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+      integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8="
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script> -->
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+    <script type="module" async>
+      import * as niivue from "/static/niivue/index.js";
+      window.niivueLoaded = new Promise((resolve, reject) => {
+        window.niivue = niivue;
+        resolve();
+      });
+    </script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link href="/static/mermaid_dark.css" rel="stylesheet" type="text/css" />
+
+    <!-- <script src="https://unpkg.com/hyperscript.org@0.9.12"></script> -->
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script> -->
+  </head>
+
+  <body>
+    <div class="w-full">
+      {% include 'components/header.html' %}
+      <div class="w-full">
+        <div
+          hx-get="{{ mainViewURL }}"
+          hx-trigger="load"
+          class="m-4"
+          id="main_view"
+        ></div>
+      </div>
+    </div>
+  </body>
+</html>

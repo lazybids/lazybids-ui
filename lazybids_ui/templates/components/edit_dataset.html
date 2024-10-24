@@ -1,0 +1,52 @@
+<form
+  class="m-4"
+  id="editDatasetForm"
+  hx-post="/html/dataset/{{ dataset.id }}/edit"
+  hx-target="#main_view"
+>
+  <h3 class="font-bold text-lg py-4">Edit dataset</h3>
+
+  <label class="flex items-center gap-2 my-4">
+    <span class="label-text">Dataset Name</span>
+    <input
+      name="name"
+      type="text"
+      class="grow input input-bordered"
+      value="{{ dataset.name }}"
+    />
+  </label>
+
+  <label class="flex items-center gap-2 my-4">
+    <span class="label-text">Icon</span>
+    <input
+      type="file"
+      class="file-input file-input-sm file-input-bordered max-w-xs"
+    />
+    <span class="badge badge-info">Optional</span>
+  </label>
+
+  <!-- Add more form fields as needed -->
+
+</form>
+<div class="flex justify-between items-center w-full mt-4">
+  <button
+    class="btn btn-error"
+    hx-delete="/html/dataset/{{ dataset.id }}"
+    hx-target="#main_view"
+    hx-confirm="Are you sure you want to delete this dataset?"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+    Delete
+  </button>
+  <input
+    type="submit"
+    form="editDatasetForm"
+    value="Save Changes"
+    class="btn btn-primary"
+  />
+</div>
+<script>
+  document.getElementById('edit-modal').showModal()
+</script>

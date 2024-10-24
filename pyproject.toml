@@ -1,29 +1,33 @@
 [tool.poetry]
 name = "lazybids-ui"
-version = "0.0.1"
+version = "0.0.2"
 description = "A web-based graphical user interface server for viewing (and manipulating) BIDS datasets, build on lazybids."
 authors = ["Roelant <roelanteijgelaar@hotmail.com>"]
 readme = "README.md"
 packages = [{include = "lazybids_ui"}]
 
 [tool.poetry.dependencies]
-python = "<3.12,>=3.8"
-lazybids = {git = "https://github.com/roelant001/lazybids.git"}
+python = "<3.12,>=3.10"
 fastapi = {extras = ["all"], version = "^0.111.0"}
 pydantic = "^2.7.4"
 sqlmodel = "^0.0.19"
 openneuro-py = "^2023.1.0"
 py7zr = "^0.21.0"
 pillow = "^10.4.0"
-celery = "^5.4.0"
-redis = "^5.0.7"
 pretty-html-table = "^0.9.16"
 pytailwindcss-extra = "^0.1.0"
 scalar-fastapi = "^1.0.3"
+lazybids = {path = "lazybids"}
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.2.2"
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.5.42"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+lazybids-ui = "lazybids_ui.main:run"
+

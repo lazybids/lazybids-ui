@@ -1,0 +1,40 @@
+site_name: LazyBIDS
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+    - navigation.tabs.sticky
+ 
+  palette: 
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+
+plugins:
+  - search
+  - mkdocstrings
+nav:
+  - Documentation: index.md
+  - Installation: /#installation
+  - Basic usage: basic_usage.md
+  - API-reference: scallar.html
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+extra_files:
+  - openapi.json

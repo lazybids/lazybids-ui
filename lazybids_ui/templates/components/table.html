@@ -1,0 +1,85 @@
+<div id="wrapper_{{ds_id}}_{{s_id}}_{{ses_id}}_{{scans}}"></div>
+{% if scans %}
+{% if ses_id %}
+<div hx-get="/html/dataset/{{ds_id}}/subject/{{s_id}}/session/{{ses_id}}/scans_view" hx-trigger="load delay:0.3s"></div>
+{% else %}
+<div hx-get="/html/dataset/{{ds_id}}/subject/{{s_id}}/scans_view" hx-trigger="load delay:0.3s"></div>
+{% endif %}
+{% endif %}
+<script>
+  {% if scans %}
+  const grid_{{ds_id|replace("-", "_")}}_{{s_id|replace("-", "_")}}_{{ses_id|replace("-", "_")}}_scans = new gridjs.Grid({
+    {% else %}
+    const grid_{{ds_id|replace("-", "_")}}_{{s_id|replace("-", "_")}}_{{ses_id|replace("-", "_")}} = new gridjs.Grid({
+      {% endif %}
+    columns: 
+    
+    {% if not(scans) %}
+    [{ name: 'participant_id', formatter: (cell) => gridjs.html(`${cell}`) }, { name: 'session_id', formatter: (cell) => gridjs.html(`${cell}`) }].concat( {{ columns | safe}}),
+    {%else%}
+    [{ name: 'name', formatter: (cell) => gridjs.html(`${cell}`) }, { name: 'files', formatter: (cell) => gridjs.html(`${cell}`) }, { name: 'metadata_files', formatter: (cell) => gridjs.html(`${cell}`) }].concat( {{ columns | safe}}),
+    {% endif %}
+
+  data: {{ df | safe }},
+  pagination: {
+    limit: 50,
+  },
+      search:true,
+      sort: true,
+      
+      resizable: true,
+      
+      
+      className: {    
+        // td: 'my-custom-td-class',
+        table: 'table table-xs bg-neutral',
+        // container: 'bg-neutral',
+        // td: 'p0 m-0',
+        // th: 'p0 m-0',
+        // tr: 'p0 m-0',
+        header: 'text-white text-xl',
+        // footer: 'bg-neutral',
+        // thead: 'bg-neutral',
+        // tbody: 'bg-neutral',
+        // search: 'bg-neutral',
+        // sort: '',
+        // pagination: 'bg-neutral',
+        // paginationSummary: 'button',
+        // paginationButton: 'button',
+        // paginationSummary: 'button',
+        // paginationButtonNext: 'bg-accent button',
+        // paginationButtonCurrent: 'button',
+        // paginationButtonPrev: 'bg-accent button',
+        // loading: '',
+        
+
+      
+      },
+      style:{
+      //   container:{
+      //     backgroundColor: '#2E3744', 
+      //   },
+      //   th:{
+      //     color: 'white',
+      //     backgroundColor: '#2E3744', 
+      //     border: '1px solid #2E3744',
+      //   },
+      //   td:{
+      //     color: '#0F0F0F',
+      //     backgroundColor: '#2E3744', 
+      //     border: '1px solid #2E3744',
+      //   },
+
+        table: {
+          'white-space': 'nowrap'
+        },
+      //   footer: {
+      //     backgroundColor: '#28374F',
+      //   }
+
+      },
+      width: '100%',
+      height: '100%',
+
+    }).render(document.getElementById('wrapper_{{ds_id}}_{{s_id}}_{{ses_id}}_{{scans}}'));
+</script>

@@ -1,0 +1,53 @@
+<a hx-get="/html/dataset/{{ ds_id }}" hx-target="#main_view">
+  <div class="flex flex-col sm:flex-row">
+    <div class="flex-none grow-0 w-12 h-10 sm:w-48 sm:h-32 py-4 mb-10">
+      <figure
+        class="scale-50 sm:scale-90 -translate-y-20 sm:-translate-y-10 -translate-x-4"
+      >
+        {{ ds.icon|safe }}
+      </figure>
+    </div>
+    <div class="grow">
+      <div class="flex md:flex-row flex-wrap">
+        <h1 class="text-4xl font-bold">{{ meta_data.name }}</h1>
+        {% if 'dataset_doi' in meta_data %}
+          <a
+            class="m-4 min-h-4"
+            href="https://doi.org/{{ meta_data.dataset_doi.replace('doi:','') }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            ><img
+              src="https://zenodo.org/badge/DOI/{{ meta_data.dataset_doi.replace('doi:','') }}.svg"
+              alt="DOI badge"
+          /></a>
+        {% endif %}
+        {% if 'license' in meta_data %}
+          {% if 'CC0' in meta_data.license %}
+            <a
+              class="m-4"
+              href="http://creativecommons.org/publicdomain/zero/1.0/"
+              target="_blank"
+              rel="noopener noreferrer"
+              ><img
+                src="https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg"
+                alt="License: CC0-1.0"
+            /></a>
+          {% endif %}
+        {% elif 'PDDL' in meta_data.license %}
+          <a
+            class="m-4"
+            href="https://opendatacommons.org/licenses/pddl/"
+            target="_blank"
+            rel="noopener noreferrer"
+            ><img
+              src="https://img.shields.io/badge/License-PDDL-brightgreen.svg"
+              alt="License: PDDL"
+          /></a>
+        {% endif %}
+      </div>
+      {% if 'authors' in meta_data %}
+        <h3 class="text-sm px-8 pb-4">{{ meta_data.authors|join(', ') }}</h3>
+      {% endif %}
+    </div>
+  </div>
+</a>

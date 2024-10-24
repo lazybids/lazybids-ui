@@ -1,0 +1,197 @@
+<div class="flex-row w-full justify-between flex flex-row">
+  <h2 class="text-xl text-white">Scan views:</h2>
+  <div class="form-control w-64">
+    <label class="label cursor-pointer">
+      <span class="label-text">Multiplanar</span>
+      <input
+        type="checkbox"
+        class="toggle toggle-secondary"
+        id="3DToggle"
+      />
+      <span class="label-text">Sync scans</span>
+      <input
+        type="checkbox"
+        class="toggle toggle-secondary"
+        checked="checked"
+        id="SyncToggle"
+      />
+    </label>
+  </div>
+</div>
+<div>
+<p class="flex flex-row items-center text-center">
+<svg class="h-8 w-8 text-white-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+</svg>
+<span>Right click + drag to adjust brightness</span>
+</p>
+</div>
+<script>
+  document
+    .getElementById("SyncToggle")
+    .addEventListener("change", function () {
+      if (this.checked) {
+        // Code to run when the checkbox is checked
+        for (var i = 0; i < resolved_nvs.length; i++) {
+          var all_other_nvs = [];
+          for (var ii = 0; ii < resolved_nvs.length; ii++) {
+            if (!(i === ii)) {
+              all_other_nvs.push(resolved_nvs[ii]);
+            }
+            resolved_nvs[i].broadcastTo(all_other_nvs, { "3d": true, "2d": true });
+          }
+        }
+      } else {
+        // Code to run when the checkbox is unchecked
+        for (var i = 0; i < resolved_nvs.length; i++) {
+          resolved_nvs[i].broadcastTo([], { "3d": false, "2d": false });
+        }
+      }
+    });
+    document
+    .getElementById("3DToggle")
+    .addEventListener("change", function () {
+      if (this.checked) {
+        // Code to run when the checkbox is checked
+        for (var i = 0; i < resolved_nvs.length; i++) {
+            resolved_nvs[i].setSliceType(resolved_nvs[i].sliceTypeMultiPlanar);
+        // Toggle max-height for scans and table classes
+        document.querySelectorAll('.max-h-\\[20rem\\]').forEach(function(element) {
+          element.classList.remove('max-h-[20rem]');
+          element.classList.add('max-h-[50rem]');
+        });
+        }
+      } else {
+        // Code to run when the checkbox is unchecked
+        for (var i = 0; i < resolved_nvs.length; i++) {
+          resolved_nvs[i].setSliceType(resolved_nvs[i].sliceTypeAxial);
+        // Toggle max-height for scans and table classes
+        document.querySelectorAll('.max-h-\\[50rem\\]').forEach(function(element) {
+          element.classList.remove('max-h-[50rem]');
+          element.classList.add('max-h-[20rem]');
+        });
+        }
+      }
+    });
+</script>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 justify-items-center width-full">
+  {% for scan in scans %}
+  <div
+    class="max-h-[20rem] w-11/12 grow pb-16 m-4 rounded-lg bg-black shadow-2xl shadow-teal-500/50"
+  >
+    <p class="px-8 py-2">{{scan.name}}</p>
+    <canvas
+      id="{{scan.name}}"
+      left="0,"
+      top="0,"
+      position="relative"
+      ,
+      flex="auto"
+      ,height="480"
+      width="640"
+    ></canvas>
+  </div>
+  {% endfor %} 
+  {% for image in images %}
+  <div
+    class="max-h-[20rem] w-11/12 grow pb-16 m-4 rounded-lg bg-black shadow-2xl shadow-teal-500/50"
+  >
+    <p class="px-8 py-2">{{image.name}}</p>
+    <div class="p-2 flex-grow flex items-center justify-center overflow-hidden">
+      {% if ses_id %}
+      <img class="h-[16rem] w-10/12 object-contain" src="/api/dataset/{{ds_id}}/subject/{{s_id}}/session/{{ses_id}}/scan/{{image.name}}/files/{{image.fname}}" alt="{{image.name}}">
+      {% else %}
+      <img class="h-[16rem] w-10/12 object-contain" src="/api/dataset/{{ds_id}}/subject/{{s_id}}/scan/{{image.name}}/files/{{image.fname}}" alt="{{image.name}}">
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+
+  {% for table in tables %}
+  <div
+    class="max-h-[40rem] w-11/12 grow pb-16 m-2 rounded-lg bg-slate-900 shadow-2xl shadow-teal-500/50 p-2 items-center">
+    <div class="flex flex-row justify-between">
+    <p class="p-2 min-h-[2rem] bg-zinc-600 text-zinc-100 rounded-lg my-2 text-black shrink">Table: {{table.name}}</p>
+    </div>
+    <div class="overflow-auto max-h-[32rem]">{{table.table | safe}}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<script async defer>
+  async function loadVolumesAsync(nv, volumeList) {
+    await nv.loadVolumes(volumeList);
+  }
+
+  async function initializeNiivue(scanName, volumeList) {
+    await window.niivueLoaded; // Wait for niivue to be loaded
+    var nv = new window.niivue.Niivue();
+    nv.setSliceType(nv.sliceTypeAxial);
+    nv.opts.dragMode = nv.dragModes.contrast;
+    nv.attachTo(scanName); // the canvas element id
+    loadVolumesAsync(nv, volumeList);
+    return nv;
+  }
+
+  var all_nvs = [];
+  var resolved_nvs = [];
+  var volumeList = {};
+
+  {% for scan in scans %}
+  // Initialize the array for each scan if it doesn't exist
+  if (!volumeList['{{scan.name}}']) {
+    volumeList['{{scan.name}}'] = [];
+  }
+
+  volumeList['{{scan.name}}'].push({
+    {% if ses_id %}
+    url: "/api/dataset/{{ds_id}}/subject/{{s_id}}/session/{{ses_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
+    {% else %}
+    url: "/api/dataset/{{ds_id}}/subject/{{s_id}}/scan/{{scan.name}}/files/{{scan.fname}}",
+    {% endif %}
+    trustCalMinMax: true,
+    // name: "some_image",
+    // colorMap: "gray",
+    // opacity: 1,
+    // visible: true,
+  });
+  {% endfor %}
+
+
+  {% for scan in scans %}
+    setTimeout(() => {
+    all_nvs.push(initializeNiivue('{{scan.name}}', volumeList['{{scan.name}}']));
+    if (all_nvs.length === {{scans|length}}) {
+      (async () => {
+        resolved_nvs = await Promise.all(all_nvs);
+        for (let i = 0; i < resolved_nvs.length; i++) {
+          let all_other_nvs = [];
+          for (let ii = 0; ii < resolved_nvs.length; ii++) {
+            if (i !== ii) {
+              all_other_nvs.push(resolved_nvs[ii]);
+            }
+          }
+          resolved_nvs[i].broadcastTo(all_other_nvs, { "3d": true, "2d": true });
+        }
+      })();
+    }
+  }, 0);
+    {% endfor %}
+</script>
+
+<!-- <script type="module" async="">
+  import * as niivue from "https://niivue.github.io/niivue/dist/index.js"
+// make an array of volumes to load
+let volumeList = [
+{
+ url: "https://niivue.github.io/niivue-demo-images/mni152.nii.gz",
+ colormap: "red", // see: https://niivue.github.io/niivue/colormaps.html
+},
+];
+const nv = new niivue.Niivue();
+nv.attachTo("sub-01_ses-01_T1w"); // attach to canvas with id="gl"
+nv.loadVolumes(volumeList);
+</script> -->
+
