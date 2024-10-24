@@ -34,9 +34,10 @@ jobs:
       - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
       - name: Generate OpenAPI JSON
         run: |
+          cd lazybids_ui
           poetry run fastapi dev &
           sleep 15  # Wait for the server to start
-          wget http://localhost:8000/openapi.json -O ./docs/openapi.json
+          wget http://localhost:8000/openapi.json -O ../docs/openapi.json
           kill %1  # Kill the background FastAPI process
       - uses: actions/cache@v4
         with:
