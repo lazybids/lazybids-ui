@@ -19,10 +19,9 @@ theme:
         icon: material/brightness-7 
         name: Switch to dark mode
 
-
 plugins:
   - search
-  - mkdocstrings
+  
 nav:
   - Documentation: index.md
   - Installation: /#installation
