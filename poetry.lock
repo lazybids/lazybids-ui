@@ -1644,26 +1644,24 @@ files = [
 
 [[package]]
 name = "lazybids"
-version = "0.2.0"
+version = "0.2.1"
 description = "lazybids is a python package that helps interact with existing bids datasets and convert existing dicom or nifti datasets to BIDS."
 optional = false
 python-versions = "<3.13,>=3.8"
-files = []
-develop = false
+files = [
+    {file = "lazybids-0.2.1-py3-none-any.whl", hash = "sha256:36ba22dda6a38cb0afd66b685c97630474a728015056e9f7e348909b97f8941c"},
+    {file = "lazybids-0.2.1.tar.gz", hash = "sha256:f0ff8230ce74e78adfca828898b39055346b66563651d26cfc6fed2a1069040c"},
+]
 
 [package.dependencies]
-h5py = "^3.10.0"
-pandas = "^2.0.0"
-pydantic = "^2.5.2"
-pydicom = "^2.4.3"
-pyyaml = "^6.0.1"
-rich = "^13.7.0"
-simpleitk = "^2.3.1"
-tqdm = "^4.66.1"
-
-[package.source]
-type = "directory"
-url = "lazybids"
+h5py = ">=3.10.0,<4.0.0"
+pandas = ">=2.0.0,<3.0.0"
+pydantic = ">=2.5.2,<3.0.0"
+pydicom = ">=2.4.3,<3.0.0"
+pyyaml = ">=6.0.1,<7.0.0"
+rich = ">=13.7.0,<14.0.0"
+simpleitk = ">=2.3.1,<3.0.0"
+tqdm = ">=4.66.1,<5.0.0"
 
 [[package]]
 name = "markdown"
@@ -4845,4 +4843,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "<3.12,>=3.10"
-content-hash = "f459dbe26a46331eced303865af08a8dc81c59f3729724ccc0accc1757ab5469"
+content-hash = "276b431b06ebda95d1694d0f7a24af29ac0953e4973de87a6bc42450c532c5f3"
