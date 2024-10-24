@@ -1649,8 +1649,10 @@ description = "lazybids is a python package that helps interact with existing bi
 optional = false
 python-versions = "<3.13,>=3.8"
 files = [
+
     {file = "lazybids-0.2.1-py3-none-any.whl", hash = "sha256:36ba22dda6a38cb0afd66b685c97630474a728015056e9f7e348909b97f8941c"},
     {file = "lazybids-0.2.1.tar.gz", hash = "sha256:f0ff8230ce74e78adfca828898b39055346b66563651d26cfc6fed2a1069040c"},
+
 ]
 
 [package.dependencies]
@@ -4844,3 +4846,4 @@ files = [
 lock-version = "2.0"
 python-versions = "<3.12,>=3.10"
 content-hash = "276b431b06ebda95d1694d0f7a24af29ac0953e4973de87a6bc42450c532c5f3"
+
