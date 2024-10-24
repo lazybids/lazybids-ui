@@ -17,7 +17,8 @@ pillow = "^10.4.0"
 pretty-html-table = "^0.9.16"
 pytailwindcss-extra = "^0.1.0"
 scalar-fastapi = "^1.0.3"
-lazybids = "^0.2.0"
+lazybids = "^0.2.1"
+
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.2.2"
