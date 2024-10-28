@@ -1,4 +1,4 @@
-# LazyBIDS-UI
+# LazyBIDS-UI | Pre-alpha release, expect bugs!
 
 LazyBIDS-UI is a web-based user interface for interacting with BIDS datasets. It provides a visual and intuitive way to explore, manage, and analyze BIDS-compliant neuroimaging data, leveraging the power of [LazyBIDS](https://github.com/lazybids/lazybids) as its core io-library.
 
@@ -13,7 +13,10 @@ Because all assets are availble both in html and throught the [REST-API](https:/
 
 Install the latest version:
 ```bash
-pip install lazybids-ui
+git clone https://github.com/lazybids/lazyBIDS-ui.git
+cd ./lazybids-ui
+pip install .
+fastapi run
 ```
 
 ## Features
@@ -27,6 +30,8 @@ pip install lazybids-ui
 ## Documentation
 
 For detailed documentation, including API specifications and advanced usage, please visit our [GitHub Pages](https://lazybids.github.io/lazybids-ui/).
+
+<!---
 
 ## Quick Start
 
@@ -45,6 +50,7 @@ For detailed documentation, including API specifications and advanced usage, ple
 ## Screenshots
 
 [Space for screenshots/GIFs of the UI]
+-->
 
 ## REST API
 
