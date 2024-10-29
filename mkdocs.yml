@@ -26,7 +26,7 @@ nav:
   - Documentation: index.md
   - Installation: /#installation
   - Basic usage: basic_usage.md
-  - API-reference: scallar.html
+  - API-reference: scalar.html
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
