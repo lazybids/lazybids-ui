@@ -57,7 +57,7 @@ For detailed documentation, including API specifications and advanced usage, ple
 
 ## REST API
 
-LazyBIDS-UI provides a comprehensive REST API for programmatic interaction with your BIDS datasets. For full API documentation, please refer to our [API Specifications](https://lazybids.github.io/lazybids-ui/api-docs).
+LazyBIDS-UI provides a comprehensive REST API for programmatic interaction with your BIDS datasets. For full API documentation, please refer to our [API Specifications](https://lazybids.github.io/lazybids-ui/scalar).
 
 Example usage:
 ```python
