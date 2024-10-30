@@ -83,6 +83,6 @@ LazyBIDS-UI is released under the [Apache 2 License](LICENSE).
 
 ## Acknowledgements
 
-LazyBIDS-UI is built upon a.o. [LazyBIDS](https://github.com/lazybids/lazybids), [SimpleITK](https://simpleitk.org), [niivue](niivue.github.io/niivue), and is inspired by the BIDS standard and community.
+LazyBIDS-UI is built upon a.o. [LazyBIDS](https://github.com/lazybids/lazybids), [SimpleITK](https://simpleitk.org), [niivue](https://niivue.github.io/niivue), and is inspired by the BIDS standard and community.
 
 <video src='https://github.com/user-attachments/assets/788e5721-21e4-49a3-9641-de5d187a42bc' width=180/>
