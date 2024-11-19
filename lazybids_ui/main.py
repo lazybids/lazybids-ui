@@ -1,5 +1,6 @@
 # Standard library imports
 import shutil
+from pkg_resources import resource_filename
 
 # Third-party imports
 import uvicorn
@@ -47,7 +48,9 @@ app = FastAPI(openapi_tags=tags_metadata)
 
 app.include_router(rest_api.router)
 app.include_router(html_api.router)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+static_dir = resource_filename('lazybids_ui', 'static')
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 templates = Jinja2Templates(directory="templates")
 

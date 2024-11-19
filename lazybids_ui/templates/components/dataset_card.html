@@ -14,13 +14,13 @@
 
 
 {% if dataset.state.value == 'SUCCESS' %}
-  <div class="card w-64 bg-neutral shadow-xl relative">
+  <div id="card_{{ ds_id }}" class="card w-64 bg-neutral shadow-xl relative">
     {{ edit_button(ds_id) }}
     <div class="badge badge-secondary m-4">{{ size }}GB</div>
     <a
       hx-get="/html/dataset/{{ ds_id }}"
       hx-target="#main_view"
-      hx-push-url="/index/dataset/{{ ds_id }}"
+      hx-push-url="/html/dataset/{{ ds_id }}"
       hx-indicator="#spinner_{{ ds_id }}"
       class="block"
     >
@@ -48,7 +48,7 @@
     </a>
   </div>
 {% elif dataset.state.value == 'FAILURE' %}
-  <div class="card w-64 bg-neutral shadow-xl relative">
+  <div id="card_{{ ds_id }}" class="card w-64 bg-neutral shadow-xl relative">
     {{ edit_button(ds_id) }}
     <div class="badge badge-secondary m-4">{{ size }}GB</div>
     <figure>{{ dataset.icon|safe }}</figure>
@@ -74,6 +74,7 @@
     hx-get="/html/dataset_card/{{ ds_id }}"
     hx-trigger="load delay:4s"
     hx-swap="outerHTML"
+    id="card_{{ ds_id }}"
   >
     {{ edit_button(ds_id) }}
     <div class="badge badge-secondary m-4">{{ size }}GB</div>

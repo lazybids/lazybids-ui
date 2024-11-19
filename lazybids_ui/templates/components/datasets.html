@@ -24,7 +24,11 @@
   <div class="divider text-xl text-white"></div>
   <div class="flex gap-4 justify-items-center flex-wrap ">
     {% for dataset in datasets %}
-      <div hx-get="/html/dataset_card/{{ dataset.id }}" hx-trigger="load"></div>
+      <div id="empty_card_{{ dataset.id }}" class="card w-64 h-64 bg-neutral shadow-xl relative" hx-get="/html/dataset_card/{{ dataset.id }}" hx-trigger="load" hx-swap="outerHTML">
+        <figure>
+          <img id="spinner_{{ dataset.id }}" class="htmx-indicator" src="/static/bars.svg" style="width: 54px; height: 54px;">
+        </figure>
+      </div>
     {% endfor %}
   </div>
 </div>

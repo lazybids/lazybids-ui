@@ -10,7 +10,7 @@
 <div class="breadcrumbs text-md mx-4">
   <ul>
     <li>
-      <a href="/" target="#main_view">
+      <a hx-get="/html/datasets" hx-target="#main_view" hx-push-url="true">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -27,7 +27,7 @@
       </a>
     </li>
     <li>
-      <a href="/html/dataset/{{ ds_id }}" target="#main_view">
+      <a hx-get="/html/dataset/{{ ds_id }}" hx-target="#main_view" hx-push-url="true">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"

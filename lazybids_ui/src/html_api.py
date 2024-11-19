@@ -19,10 +19,10 @@ templates = Jinja2Templates(directory="templates")
 
 # Helper functions
 def to_subject_url(subject_id, ds_id):
-    return f"<a class='btn btn-outline btn-primary btn-xs' href='/html/dataset/{ds_id}/subject/{subject_id}' hx-target='#main_view'>{subject_id}</a>"
+    return f"<a class='btn btn-outline btn-primary btn-xs' href='/html/dataset/{ds_id}/subject/{subject_id}'>{subject_id}</a>"
 
 def to_session_url(subject_id, session_id, ds_id):
-    return f"<a class='btn btn-outline btn-secondary btn-xs' href='/html/dataset/{ds_id}/subject/{subject_id}/session/{session_id}' hx-target='#main_view'>{session_id}</a>"
+    return f"<a class='btn btn-outline btn-secondary btn-xs' href='/html/dataset/{ds_id}/subject/{subject_id}/session/{session_id}'>{session_id}</a>"
 
 def to_file_url(ds_id, s_id, ses_id, scan_id, file_names):
     output = ''
@@ -47,13 +47,25 @@ def to_file_url(ds_id, s_id, ses_id, scan_id, file_names):
 async def error(request, e):
     return templates.TemplateResponse("components/error.html", context={"request": request, 'error': e})
 
+def needs_full_page_render(request):
+    print(request.headers)
+    if 'hx-request' not in request.headers.keys():
+        return True
+    elif 'hx-history-restore-request' in request.headers.keys() and request.headers['hx-history-restore-request'] == 'true':
+        return True
+    return False
+
 # Routes
 @router.get("/datasets", response_class=HTMLResponse)
 async def datasets(request: Request, session: Session = Depends(models.get_db)):
-    # Refresh the session to ensure we have the latest data
-    session.expire_all()
-    context = {'datasets': await rest_api.get_datasets(session), 'request': request}
-    return templates.TemplateResponse("components/datasets.html", context)
+    if needs_full_page_render(request):
+        context = {"request": request, 'mainViewURL': f"/html/datasets"}
+        return templates.TemplateResponse("root.html", context)
+    else:
+        # Refresh the session to ensure we have the latest data
+        session.expire_all()
+        context = {'datasets': await rest_api.get_datasets(session), 'request': request}
+        return templates.TemplateResponse("components/datasets.html", context)
 
 @router.get("/dataset_card/{ds_id}", response_class=HTMLResponse)
 async def dataset_card(request: Request, ds_id: int, session: Session = Depends(models.get_db)):
@@ -148,7 +160,7 @@ async def create_dataset(
 
 @router.get("/dataset/{ds_id}", response_class=HTMLResponse)
 async def get_dataset(request: Request, ds_id: int, session: Session = Depends(models.get_db)):
-    if 'hx-request' not in request.headers.keys():
+    if needs_full_page_render(request):
         context = {"request": request, 'mainViewURL': f"/html/dataset/{ds_id}"}
         return templates.TemplateResponse("root.html", context)
     else:
@@ -165,7 +177,7 @@ async def delete_dataset(request: Request, ds_id: int, session: Session = Depend
 
 @router.get("/dataset/{ds_id}/subjects", response_class=HTMLResponse)
 async def get_subjects(request: Request, ds_id: int, session: Session = Depends(models.get_db)):
-    if 'hx-request' not in request.headers.keys():
+    if needs_full_page_render(request):
         context = {"request": request, 'mainViewURL': f"/html/dataset/{ds_id}"}
         return templates.TemplateResponse("root.html", context)
     else:
@@ -191,7 +203,7 @@ async def get_subjects(request: Request, ds_id: int, session: Session = Depends(
 
 @router.get("/dataset/{ds_id}/subject/{s_id}", response_class=HTMLResponse)
 async def get_subject(request: Request, ds_id: int, s_id: str, session: Session = Depends(models.get_db)):
-    if 'hx-request' not in request.headers.keys():
+    if needs_full_page_render(request):
         context = {"request": request, 'mainViewURL': f"/html/dataset/{ds_id}/subject/{s_id}"}
         return templates.TemplateResponse("root.html", context)
     else:
@@ -207,7 +219,7 @@ async def get_subject(request: Request, ds_id: int, s_id: str, session: Session 
 @router.get("/dataset/{ds_id}/subject/{s_id}/sessions", response_class=HTMLResponse)
 async def get_sessions(request: Request, ds_id: int, s_id: str, session: Session = Depends(models.get_db)):
     try:
-        if 'hx-request' not in request.headers.keys():
+        if needs_full_page_render(request):
             context = {"request": request, 'mainViewURL': f"/html/dataset/{ds_id}/subject/{s_id}/sessions"}
             return templates.TemplateResponse("root.html", context)
         else:
@@ -241,7 +253,7 @@ async def get_sessions(request: Request, ds_id: int, s_id: str, session: Session
 
 @router.get("/dataset/{ds_id}/subject/{s_id}/session/{ses_id}", response_class=HTMLResponse)
 async def get_session(request: Request, ds_id: int, s_id: str, ses_id: str, session: Session = Depends(models.get_db)):
-    if 'hx-request' not in request.headers.keys():
+    if needs_full_page_render(request):
         context = {"request": request, 'mainViewURL': f"/html/dataset/{ds_id}/subject/{s_id}/session/{ses_id}"}
         return templates.TemplateResponse("root.html", context)
     else:
@@ -257,7 +269,7 @@ async def get_session(request: Request, ds_id: int, s_id: str, ses_id: str, sess
 
 @router.get("/dataset/{ds_id}/subject/{s_id}/session/{ses_id}/scans", response_class=HTMLResponse)
 async def get_scans(request: Request, ds_id: int, s_id: str, ses_id: str, session: Session = Depends(models.get_db)):
-    if 'hx-request' not in request.headers.keys():
+    if needs_full_page_render(request):
         context = {"request": request, 'mainViewURL': f"/html/dataset/{ds_id}/subject/{s_id}/session/{ses_id}/scans"}
         return templates.TemplateResponse("root.html", context)
     else:
@@ -294,7 +306,7 @@ async def get_scans(request: Request, ds_id: int, s_id: str, ses_id: str, sessio
 
 @router.get("/dataset/{ds_id}/subject/{s_id}/scans", response_class=HTMLResponse)
 async def get_scans(request: Request, ds_id: int, s_id: str, session: Session = Depends(models.get_db)):
-    if 'hx-request' not in request.headers.keys():
+    if needs_full_page_render(request):
         context = {"request": request, 'mainViewURL': f"/html/dataset/{ds_id}/subject/scans"}
         return templates.TemplateResponse("root.html", context)
     else:
@@ -335,7 +347,7 @@ async def get_scans(request: Request, ds_id: int, s_id: str, session: Session = 
 
 @router.get("/dataset/{ds_id}/subject/{s_id}/session/{ses_id}/scans_view", response_class=HTMLResponse)
 async def get_scans_view(request: Request, ds_id: int, s_id: str, ses_id: str, session: Session = Depends(models.get_db)):
-    if 'hx-request' not in request.headers.keys():
+    if needs_full_page_render(request):
         context = {"request": request, 'mainViewURL': f"/html/dataset/{ds_id}/subject/{s_id}/session/{ses_id}/scans"}
         return templates.TemplateResponse("root.html", context)
     else:
@@ -360,7 +372,7 @@ async def get_scans_view(request: Request, ds_id: int, s_id: str, ses_id: str, s
 
 @router.get("/dataset/{ds_id}/subject/{s_id}/scans_view", response_class=HTMLResponse)
 async def get_scans_view(request: Request, ds_id: int, s_id: str, session: Session = Depends(models.get_db)):
-    if 'hx-request' not in request.headers.keys():
+    if needs_full_page_render(request):
         context = {"request": request, 'mainViewURL': f"/html/dataset/{ds_id}/subject/{s_id}/scans"}
         return templates.TemplateResponse("root.html", context)
     else:
