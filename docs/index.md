@@ -54,7 +54,7 @@ LazyBIDS-UI exposes a REST API that allows programmatic access to BIDS datasets.
 
 For detailed API documentation, including endpoints, request/response formats, and examples in various programming languages, please refer to:
 
-[LazyBIDS-UI API Reference](/scalar)
+[LazyBIDS-UI API Reference](https://lazybids.github.io/lazybids-ui/scalar)
 
 ## Troubleshooting
 
