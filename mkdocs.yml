@@ -18,6 +18,10 @@ theme:
       toggle:
         icon: material/brightness-7 
         name: Switch to dark mode
+extra:
+  head:
+    - |
+      <meta name="google-site-verification" content="HUjWpUBQkrFzklom3cDcByAZSuRHqdKtX7qe4IE8x60" />
 
 plugins:
   - search
