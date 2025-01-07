@@ -1,4 +1,4 @@
-site_name: LazyBIDS
+site_name: LazyBIDS-UI
 theme:
   name: material
   features:
@@ -25,8 +25,6 @@ plugins:
   
 nav:
   - Documentation: index.md
-  - Installation: /#installation
-  - Basic usage: basic_usage.md
   - API-reference: scalar.html
   - "": googlebef590d85e3e012f.html
 markdown_extensions:

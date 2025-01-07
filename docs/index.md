@@ -17,19 +17,26 @@ LazyBIDS-UI is a web-based interface for managing and interacting with BIDS (Bra
 
 LazyBIDS-UI is designed to simplify the process of working with BIDS datasets. It provides a web interface that allows users to:
 
-- Browse and explore BIDS datasets
+- Browse and explore BIDS datasets in a graphical user interface
 - View and analyze neuroimaging data
 - Manage datasets, subjects, sessions, and scans
-- Interact with the [LazyBIDS](https://lazybids.github.io/lazybids) library through a graphical interface
+- Interact with BIDS datasets using REST-API or [LazyBIDS](https://lazybids.github.io/lazybids) python library
 
 ## Getting Started
 
-```bash
-pipx run lazybids-ui
-```
-## User Interface
+Install and run the latest version:
 
-(Description of main UI components and navigation will be added here, along with screenshots)
+```bash
+git clone https://github.com/lazybids/lazyBIDS-ui.git
+cd ./lazyBIDS-ui
+pip install .
+cd ./lazybids_ui/
+fastapi run
+```
+
+## User Interface
+<iframe width="560" height="315" src="https://www.youtube.com/embed/VM2L-RWl9eI" title="LazyBIDS-UI Demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 
 ## Features
 
@@ -40,11 +47,32 @@ pipx run lazybids-ui
 - Search Functionality
 - Data Export
 
-(Detailed explanations of each feature will be added)
+### Dataset Managment
+LazyBIDS-UI provides multiple ways to add datasets to the system:
+
+1. **Upload ZIP File**
+   - Upload a compressed BIDS dataset directly through the web interface
+   - Supports ZIP files containing complete BIDS-compliant datasets
+   - Automatically extracts and validates the dataset structure
+
+2. **Local Directory**
+   - Point to an existing BIDS dataset directory on the server
+   - Useful for large datasets already present on the system
+   - Supports both absolute and relative paths
+   - No data copying required - works directly with the source files
+
+3. **OpenNeuro Integration** 
+   - Download datasets directly from OpenNeuro.org
+   - Simply provide the OpenNeuro dataset ID (e.g., ds000001)
+   - Automatically downloads and imports the complete dataset
+   - Maintains all original metadata and file organization
+
+After import, datasets are immediately available for browsing, visualization, and analysis through the UI.
+
 
 ## LazyBIDS Library
 
-LazyBIDS-UI is built on top of the LazyBIDS library, which provides powerful tools for working with BIDS datasets programmatically. For detailed information about the LazyBIDS library and its Python client, please visit:
+LazyBIDS-UI is built on top of the LazyBIDS library, which provides powerful tools for working with BIDS datasets programmatically. For detailed information about the LazyBIDS library and its Python client to interact with datasets on the server, please visit:
 
 [LazyBIDS Documentation](https://lazybids.github.io/lazybids/)
 
@@ -56,9 +84,6 @@ For detailed API documentation, including endpoints, request/response formats, a
 
 [LazyBIDS-UI API Reference](https://lazybids.github.io/lazybids-ui/scalar)
 
-## Troubleshooting
-
-(Common issues and their solutions will be added here)
 
 ## Contributing
 

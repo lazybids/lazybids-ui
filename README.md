@@ -11,11 +11,12 @@ Because all assets are availble both in html and throught the [REST-API](https:/
 - Query the API for the data you need
 - Voilà.
 
-Install the latest version:
+Install and run the latest version:
 ```bash
 git clone https://github.com/lazybids/lazyBIDS-ui.git
-cd ./lazybids-ui
+cd ./lazyBIDS-ui
 pip install .
+cd ./lazybids_ui/
 fastapi run
 ```
 
