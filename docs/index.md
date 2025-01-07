@@ -50,22 +50,22 @@ fastapi run
 ### Dataset Managment
 LazyBIDS-UI provides multiple ways to add datasets to the system:
 
-1. **Upload ZIP File**
-   - Upload a compressed BIDS dataset directly through the web interface
-   - Supports ZIP files containing complete BIDS-compliant datasets
-   - Automatically extracts and validates the dataset structure
+1. **Upload ZIP File**  
+   * Upload a compressed BIDS dataset directly through the web interface
+   * Supports ZIP files containing complete BIDS-compliant datasets
+   * Automatically extracts and validates the dataset structure
 
-2. **Local Directory**
-   - Point to an existing BIDS dataset directory on the server
-   - Useful for large datasets already present on the system
-   - Supports both absolute and relative paths
-   - No data copying required - works directly with the source files
+2. **Local Directory**  
+   * Point to an existing BIDS dataset directory on the server
+   * Useful for large datasets already present on the system
+   * Supports both absolute and relative paths
+   * No data copying required - works directly with the source files
 
-3. **OpenNeuro Integration** 
-   - Download datasets directly from OpenNeuro.org
-   - Simply provide the OpenNeuro dataset ID (e.g., ds000001)
-   - Automatically downloads and imports the complete dataset
-   - Maintains all original metadata and file organization
+3. **OpenNeuro Integration**  
+   * Download datasets directly from OpenNeuro.org
+   * Simply provide the OpenNeuro dataset ID (e.g., ds000001)
+   * Automatically downloads and imports the complete dataset
+   * Maintains all original metadata and file organization
 
 After import, datasets are immediately available for browsing, visualization, and analysis through the UI.
 
