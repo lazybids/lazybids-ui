@@ -18,7 +18,8 @@ theme:
       toggle:
         icon: material/brightness-7 
         name: Switch to dark mode
-
+  logo: LBicon.svg
+  favicon: LBicon.svg
 plugins:
   - search
   
